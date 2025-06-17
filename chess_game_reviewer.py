@@ -1,3 +1,4 @@
+# chess_game_reviewer.py
 import chess
 import chess.pgn
 import chess.svg
@@ -15,7 +16,7 @@ from tkinterhtml import HtmlFrame
 
 # Configure logging
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(levelname)s - [Reviewer] %(message)s',
     handlers=[
         RotatingFileHandler('chess_bot.log', maxBytes=10*1024*1024, backupCount=5),
@@ -33,7 +34,7 @@ class ChessGameReviewerGUI:
             'grok_api_key': '',
             'pgn_directory': os.path.expanduser("~/Downloads")
         }
-        self.stockfish = Stockfish(path="stockfish")  # Adjust path to Stockfish binary
+        self.stockfish = Stockfish(path='stockfish')  # Adjust path to Stockfish binary
         self.stockfish.set_depth(20)
         self.load_config()
         self.create_widgets()
@@ -330,8 +331,9 @@ class ChessGameReviewerGUI:
                 if message_type == 'analysis_update':
                     self.analysis_text.delete(1.0, tk.END)
                     self.analysis_text.insert(tk.END, data)
+                    self.analysis_text.see(tk.END)
                 elif message_type == 'error':
-                    self.analysis_text.insert(tk.END, f"ERROR: {data}\n")
+                    self.analysis_text.insert(tk.END, f"Error: {data}\n")
                     self.analysis_text.see(tk.END)
         except queue.Empty:
             pass
@@ -344,4 +346,37 @@ class ChessGameReviewerGUI:
         try:
             if os.path.exists('chess_bot_config.json'):
                 with open('chess_bot_config.json', 'r') as f:
-                    saved_config = json.load(f
+                    saved_config = json.load(f)
+                    self.config.update(saved_config)
+                    logger.info("Configuration loaded")
+        except Exception as e:
+            logger.error(f"Error loading config: {e}")
+    
+    def save_config(self):
+        try:
+            self.config['grok_api_key'] = self.api_key_var.get()
+            self.config['pgn_directory'] = self.pgn_dir_var.get()
+            with open('chess_bot_config.json', 'w') as f:
+                json.dump(self.config, f, indent=2)
+            logger.info("Configuration saved")
+            messagebox.showinfo("Configuration", "Configuration saved successfully!")
+        except Exception as e:
+            logger.error(f"Error saving configuration: {e}")
+            messagebox.showerror("Configuration", f"Error saving configuration: {e}")
+
+def main():
+    root = tk.Tk()
+    app = ChessGameReviewerGUI(root)
+    root.mainloop()
+
+if __name__ == "__main__":
+    try:
+        logger.info("Reviewer application started")
+        main()
+    except KeyboardInterrupt:
+        logger.info("Reviewer stopped by user")
+        print("Reviewer stopped.")
+    except Exception as e:
+        logger.error(f"Reviewer error: {e}")
+        print(f"Reviewer error: {e}")
+# End of chess_game_reviewer.py
