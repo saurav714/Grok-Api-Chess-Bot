@@ -1,4 +1,3 @@
-# chess_game_reviewer.py
 import chess
 import chess.pgn
 import chess.svg
@@ -13,29 +12,49 @@ from threading import Thread
 import queue
 from stockfish import Stockfish
 from tkinterhtml import HtmlFrame
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import requests
+import numpy as np
+from datetime import datetime
 
 # Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - [Reviewer] %(message)s',
     handlers=[
-        RotatingFileHandler('chess_bot.log', maxBytes=10*1024*1024, backupCount=5),
+        RotatingFileHandler('chess_reviewer.log', maxBytes=10*1024*1024, backupCount=5),
         logging.StreamHandler()
     ]
 )
 logger = logging.getLogger(__name__)
 
+class ChessAnalysis:
+    def __init__(self):
+        self.evaluations = []
+        self.positions = []
+        self.comments = []
+        self.best_moves = []
+        self.player_moves = []
+        self.accuracy = 0.0
+        self.blunders = []
+        self.mistakes = []
+        self.brilliant_moves = []
+
 class ChessGameReviewerGUI:
     def __init__(self, root):
         self.root = root
-        self.root.title("Chess Game Reviewer")
-        self.root.geometry("1000x600")
+        self.root.title("Enhanced Chess Game Reviewer")
+        self.root.geometry("1200x800")
         self.config = {
             'grok_api_key': '',
-            'pgn_directory': os.path.expanduser("~/Downloads")
+            'pgn_directory': os.path.expanduser("~/Downloads"),
+            'stockfish_depth': 20,
+            'analysis_threshold': 3.0,
+            'brilliant_threshold': 0.5,
+            'mistake_threshold': 1.5
         }
-        self.stockfish = Stockfish(path='stockfish')  # Adjust path to Stockfish binary
-        self.stockfish.set_depth(20)
+        self.setup_stockfish()
         self.load_config()
         self.create_widgets()
         self.message_queue = queue.Queue()
@@ -43,326 +62,338 @@ class ChessGameReviewerGUI:
         self.platform = None
         self.current_move = 0
         self.move_nodes = []
+        self.analysis = ChessAnalysis()
+        self.analysis_running = False
         self.root.after(100, self.process_queue)
-    
+        
+    def setup_stockfish(self):
+        try:
+            self.stockfish = Stockfish(path='stockfish')
+            self.stockfish.set_depth(self.config['stockfish_depth'])
+            self.stockfish.set_skill_level(20)
+            logger.info("Stockfish engine initialized")
+        except Exception as e:
+            logger.error(f"Error initializing Stockfish: {e}")
+            messagebox.showerror("Error", f"Failed to initialize Stockfish engine: {e}")
+            self.stockfish = None
+
     def create_widgets(self):
-        notebook = ttk.Notebook(self.root)
-        notebook.pack(fill='both', expand=True, padx=10, pady=10)
-        config_frame = ttk.Frame(notebook)
-        notebook.add(config_frame, text="Configuration")
-        self.create_config_tab(config_frame)
-        game_frame = ttk.Frame(notebook)
-        notebook.add(game_frame, text="Game Details")
-        self.create_game_tab(game_frame)
-        analysis_frame = ttk.Frame(notebook)
-        notebook.add(analysis_frame, text="Analysis")
-        self.create_analysis_tab(analysis_frame)
-    
-    def create_config_tab(self, parent):
-        api_frame = ttk.LabelFrame(parent, text="API Configuration")
-        api_frame.pack(fill='x', padx=5, pady=5)
-        ttk.Label(api_frame, text="Grok API Key (optional):").grid(row=0, column=0, sticky='w', padx=5, pady=5)
-        self.api_key_var = tk.StringVar(value=self.config['grok_api_key'])
-        api_entry = ttk.Entry(api_frame, textvariable=self.api_key_var, width=50, show='*')
-        api_entry.grid(row=0, column=1, padx=5, pady=5)
+        self.create_menu()
         
-        pgn_frame = ttk.LabelFrame(parent, text="PGN Directory")
-        pgn_frame.pack(fill='x', padx=5, pady=5)
-        ttk.Label(pgn_frame, text="Directory:").grid(row=0, column=0, sticky='w', padx=5, pady=5)
-        self.pgn_dir_var = tk.StringVar(value=self.config['pgn_directory'])
-        ttk.Entry(pgn_frame, textvariable=self.pgn_dir_var, width=50).grid(row=0, column=1, padx=5, pady=5)
-        ttk.Button(pgn_frame, text="Browse", command=self.browse_pgn_directory).grid(row=0, column=2, padx=5, pady=5)
+        # Main container with paned window
+        self.paned = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        self.paned.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        ttk.Button(parent, text="Save Configuration", command=self.save_config).pack(pady=10)
-    
-    def create_game_tab(self, parent):
-        control_frame = ttk.Frame(parent)
-        control_frame.pack(fill='x', padx=5, pady=5)
-        ttk.Button(control_frame, text="Load Latest PGN", command=self.load_latest_pgn).pack(side='left', padx=5)
-        ttk.Button(control_frame, text="Select PGN File", command=self.select_pgn_file).pack(side='left', padx=5)
-        ttk.Button(control_frame, text="Analyze Game", command=self.start_analysis).pack(side='left', padx=5)
+        # Left panel for board and controls
+        left_panel = ttk.Frame(self.paned)
+        self.paned.add(left_panel, weight=1)
         
-        status_frame = ttk.LabelFrame(parent, text="Status")
-        status_frame.pack(fill='x', padx=5, pady=5)
-        self.status_var = tk.StringVar(value="Ready")
-        ttk.Label(status_frame, textvariable=self.status_var).pack(padx=5, pady=5)
+        # Board frame
+        board_frame = ttk.LabelFrame(left_panel, text="Chess Board")
+        board_frame.pack(fill=tk.BOTH, expand=True, padx=5, pady=5)
         
-        content_frame = ttk.Frame(parent)
-        content_frame.pack(fill='both', expand=True, padx=5, pady=5)
-        
-        board_frame = ttk.LabelFrame(content_frame, text="Board")
-        board_frame.pack(side='left', fill='both', expand=True, padx=5)
         self.board_html = HtmlFrame(board_frame)
-        self.board_html.pack(fill='both', expand=True)
+        self.board_html.pack(fill=tk.BOTH, expand=True)
         self.update_board_svg(chess.Board())
         
-        nav_frame = ttk.Frame(board_frame)
-        nav_frame.pack(fill='x', padx=5, pady=5)
-        ttk.Button(nav_frame, text="<<", command=self.first_move).pack(side='left', padx=2)
-        ttk.Button(nav_frame, text="<", command=self.prev_move).pack(side='left', padx=2)
-        ttk.Button(nav_frame, text=">", command=self.next_move).pack(side='left', padx=2)
-        ttk.Button(nav_frame, text=">>", command=self.last_move).pack(side='left', padx=2)
+        # Navigation controls
+        nav_frame = ttk.Frame(left_panel)
+        nav_frame.pack(fill=tk.X, padx=5, pady=5)
         
-        game_frame = ttk.LabelFrame(content_frame, text="Game Details")
-        game_frame.pack(side='right', fill='both', expand=True, padx=5)
-        self.game_text = tk.Text(game_frame, height=15, width=30)
-        game_scrollbar = ttk.Scrollbar(game_frame, orient='vertical', command=self.game_text.yview)
-        self.game_text.configure(yscrollcommand=game_scrollbar.set)
-        self.game_text.pack(side='left', fill='both', expand=True)
-        game_scrollbar.pack(side='right', fill='y')
-    
-    def create_analysis_tab(self, parent):
-        self.analysis_text = tk.Text(parent, height=25, width=80)
-        analysis_scrollbar = ttk.Scrollbar(parent, orient='vertical', command=self.analysis_text.yview)
-        self.analysis_text.configure(yscrollcommand=analysis_scrollbar.set)
-        self.analysis_text.pack(side='left', fill='both', expand=True)
-        analysis_scrollbar.pack(side='right', fill='y')
-        ttk.Button(parent, text="Clear Analysis", command=self.clear_analysis).pack(pady=5)
-    
-    def browse_pgn_directory(self):
-        directory = filedialog.askdirectory(initialdir=self.config['pgn_directory'])
-        if directory:
-            self.pgn_dir_var.set(directory)
-            logger.info(f"PGN directory set to: {directory}")
-    
-    def load_latest_pgn(self):
-        try:
-            self.status_var.set("Searching for PGN...")
-            pgn_dir = self.pgn_dir_var.get()
-            if not os.path.exists(pgn_dir):
-                logger.error(f"PGN directory does not exist: {pgn_dir}")
-                messagebox.showerror("Error", f"PGN directory not found: {pgn_dir}")
-                self.status_var.set("Ready")
-                return
-            
-            pgn_files = [
-                f for f in os.listdir(pgn_dir)
-                if f.endswith('.pgn') and ('lichess_' in f.lower() or 'chess_com_' in f.lower())
-            ]
-            if not pgn_files:
-                logger.warning("No Lichess or Chess.com PGN files found in directory")
-                messagebox.showwarning("Warning", "No Lichess or Chess.com PGN files found")
-                self.status_var.set("Ready")
-                return
-            
-            latest_pgn = max(
-                pgn_files,
-                key=lambda f: os.path.getmtime(os.path.join(pgn_dir, f))
-            )
-            pgn_path = os.path.join(pgn_dir, latest_pgn)
-            self.load_pgn(pgn_path)
-            self.status_var.set(f"Loaded: {latest_pgn}")
-            
-        except Exception as e:
-            logger.error(f"Error loading latest PGN: {e}")
-            messagebox.showerror("Error", f"Error loading PGN: {e}")
-            self.status_var.set("Ready")
-    
-    def select_pgn_file(self):
-        try:
-            pgn_file = filedialog.askopenfilename(
-                initialdir=self.pgn_dir_var.get(),
-                filetypes=[("PGN files", "*.pgn")]
-            )
-            if pgn_file:
-                self.load_pgn(pgn_file)
-                self.status_var.set(f"Loaded: {os.path.basename(pgn_file)}")
-        except Exception as e:
-            logger.error(f"Error selecting PGN file: {e}")
-            messagebox.showerror("Error", f"Error selecting PGN: {e}")
-            self.status_var.set("Ready")
-    
-    def load_pgn(self, pgn_path):
-        try:
-            with open(pgn_path, 'r', encoding='utf-8') as pgn_file:
-                self.pgn_game = chess.pgn.read_game(pgn_file)
-            if not self.pgn_game:
-                logger.error("Invalid or empty PGN file")
-                messagebox.showerror("Error", "Invalid or empty PGN file")
-                return
-            
-            # Detect platform
-            headers = self.pgn_game.headers
-            site = headers.get('Site', '').lower()
-            if 'lichess' in site or 'lichess' in os.path.basename(pgn_path).lower():
-                self.platform = "Lichess"
-            elif 'chess.com' in site or 'chess_com' in os.path.basename(pgn_path).lower():
-                self.platform = "Chess.com"
-            else:
-                self.platform = "Unknown"
-            logger.info(f"Detected platform: {self.platform}")
-            
-            # Collect moves
-            self.move_nodes = []
-            node = self.pgn_game
-            self.move_nodes.append(node.board())
-            while node.variations:
-                node = node.variations[0]
-                self.move_nodes.append(node.board())
-            
-            # Display game details
-            moves = []
-            node = self.pgn_game
-            while node.variations:
-                move = node.variations[0].move
-                moves.append(node.board().san(move))
-                node = node.variations[0]
-            
-            game_text = f"Platform: {self.platform}\n"
-            game_text += f"White: {headers.get('White', 'Unknown')}\n"
-            game_text += f"Black: {headers.get('Black', 'Unknown')}\n"
-            game_text += f"Result: {headers.get('Result', '*')}\n"
-            game_text += f"Date: {headers.get('Date', 'Unknown')}\n"
-            game_text += f"Site: {headers.get('Site', 'Unknown')}\n"
-            game_text += f"Event: {headers.get('Event', 'Unknown')}\n\n"
-            game_text += "Moves:\n"
-            for i, move in enumerate(moves, 1):
-                if i % 2 == 1:
-                    game_text += f"{(i+1)//2}. {move} "
-                else:
-                    game_text += f"{move}\n"
-            
-            self.game_text.delete(1.0, tk.END)
-            self.game_text.insert(tk.END, game_text)
-            self.current_move = 0
-            self.update_board_svg(self.move_nodes[0])
-            logger.info(f"Loaded PGN from {pgn_path}")
-            messagebox.showinfo("Success", f"Loaded PGN: {os.path.basename(pgn_path)} ({self.platform})")
-            
-        except Exception as e:
-            logger.error(f"Error loading PGN {pgn_path}: {e}")
-            messagebox.showerror("Error", f"Error loading PGN: {e}")
-    
-    def first_move(self):
-        self.current_move = 0
-        self.update_board_svg(self.move_nodes[self.current_move])
-    
-    def prev_move(self):
-        if self.current_move > 0:
-            self.current_move -= 1
-            self.update_board_svg(self.move_nodes[self.current_move])
-    
-    def next_move(self):
-        if self.current_move < len(self.move_nodes) - 1:
-            self.current_move += 1
-            self.update_board_svg(self.move_nodes[self.current_move])
-    
-    def last_move(self):
-        self.current_move = len(self.move_nodes) - 1
-        self.update_board_svg(self.move_nodes[self.current_move])
-    
+        ttk.Button(nav_frame, text="<<", command=self.first_move).pack(side=tk.LEFT, padx=2)
+        ttk.Button(nav_frame, text="<", command=self.prev_move).pack(side=tk.LEFT, padx=2)
+        self.move_var = tk.StringVar(value="Move: 0/0")
+        ttk.Label(nav_frame, textvariable=self.move_var).pack(side=tk.LEFT, padx=10)
+        ttk.Button(nav_frame, text=">", command=self.next_move).pack(side=tk.LEFT, padx=2)
+        ttk.Button(nav_frame, text=">>", command=self.last_move).pack(side=tk.LEFT, padx=2)
+        
+        # Right panel with notebook
+        right_panel = ttk.Notebook(self.paned)
+        self.paned.add(right_panel, weight=1)
+        
+        # Game details tab
+        game_frame = ttk.Frame(right_panel)
+        right_panel.add(game_frame, text="Game Details")
+        
+        self.game_text = tk.Text(game_frame, height=15, width=40)
+        game_scroll = ttk.Scrollbar(game_frame, command=self.game_text.yview)
+        self.game_text.configure(yscrollcommand=game_scroll.set)
+        self.game_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        game_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Analysis tab
+        analysis_frame = ttk.Frame(right_panel)
+        right_panel.add(analysis_frame, text="Analysis")
+        
+        # Analysis controls
+        control_frame = ttk.Frame(analysis_frame)
+        control_frame.pack(fill=tk.X, padx=5, pady=5)
+        
+        ttk.Button(control_frame, text="Start Analysis", command=self.start_analysis).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Stop Analysis", command=self.stop_analysis).pack(side=tk.LEFT, padx=5)
+        ttk.Button(control_frame, text="Export Analysis", command=self.export_analysis).pack(side=tk.LEFT, padx=5)
+        
+        # Progress bar
+        self.progress_var = tk.DoubleVar()
+        self.progress = ttk.Progressbar(analysis_frame, variable=self.progress_var, maximum=100)
+        self.progress.pack(fill=tk.X, padx=5, pady=5)
+        
+        # Analysis text
+        self.analysis_text = tk.Text(analysis_frame, height=20, width=40)
+        analysis_scroll = ttk.Scrollbar(analysis_frame, command=self.analysis_text.yview)
+        self.analysis_text.configure(yscrollcommand=analysis_scroll.set)
+        self.analysis_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        analysis_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Evaluation graph tab
+        graph_frame = ttk.Frame(right_panel)
+        right_panel.add(graph_frame, text="Evaluation Graph")
+        
+        self.figure, self.ax = plt.subplots(figsize=(6, 4))
+        self.canvas = FigureCanvasTkAgg(self.figure, master=graph_frame)
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+
+    def create_menu(self):
+        menubar = tk.Menu(self.root)
+        self.root.config(menu=menubar)
+        
+        file_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="File", menu=file_menu)
+        file_menu.add_command(label="Load PGN", command=self.select_pgn_file)
+        file_menu.add_command(label="Load Latest", command=self.load_latest_pgn)
+        file_menu.add_separator()
+        file_menu.add_command(label="Exit", command=self.root.quit)
+        
+        config_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Configuration", menu=config_menu)
+        config_menu.add_command(label="Settings", command=self.show_settings)
+        
+        help_menu = tk.Menu(menubar, tearoff=0)
+        menubar.add_cascade(label="Help", menu=help_menu)
+        help_menu.add_command(label="About", command=self.show_about)
+
+    def show_settings(self):
+        settings = tk.Toplevel(self.root)
+        settings.title("Settings")
+        settings.geometry("400x300")
+        
+        ttk.Label(settings, text="Grok API Key:").pack(padx=5, pady=5)
+        api_key = ttk.Entry(settings, show="*")
+        api_key.insert(0, self.config['grok_api_key'])
+        api_key.pack(padx=5, pady=5)
+        
+        ttk.Label(settings, text="Stockfish Depth:").pack(padx=5, pady=5)
+        depth = ttk.Entry(settings)
+        depth.insert(0, str(self.config['stockfish_depth']))
+        depth.pack(padx=5, pady=5)
+        
+        ttk.Button(settings, text="Save", command=lambda: self.save_settings(
+            api_key.get(), int(depth.get())
+        )).pack(pady=10)
+
+    def save_settings(self, api_key, depth):
+        self.config['grok_api_key'] = api_key
+        self.config['stockfish_depth'] = depth
+        self.stockfish.set_depth(depth)
+        self.save_config()
+        
+    def show_about(self):
+        messagebox.showinfo(
+            "About",
+            "Enhanced Chess Game Reviewer\n\n"
+            "A tool for analyzing chess games using both Stockfish and Grok AI.\n"
+            "Version 2.0"
+        )
+
     def start_analysis(self):
         if not self.pgn_game:
-            logger.warning("No PGN loaded for analysis")
             messagebox.showwarning("Warning", "Please load a PGN file first")
             return
         
-        self.status_var.set("Analyzing...")
+        if self.analysis_running:
+            messagebox.showinfo("Info", "Analysis is already running")
+            return
+        
+        self.analysis_running = True
+        self.progress_var.set(0)
         Thread(target=self.analyze_game, daemon=True).start()
-    
+
+    def stop_analysis(self):
+        self.analysis_running = False
+        
     def analyze_game(self):
         try:
-            analysis = "Game Analysis\n============\n"
+            self.analysis = ChessAnalysis()
             board = chess.Board()
             node = self.pgn_game
-            move_number = 1
-            blunders = []
-            brilliant_moves = []
+            total_moves = sum(1 for _ in node.mainline())
+            moves_analyzed = 0
             
-            while node.variations:
+            while node.variations and self.analysis_running:
                 move = node.variations[0].move
                 san_move = board.san(move)
                 fen_before = board.fen()
+                
+                # Stockfish analysis
                 self.stockfish.set_fen_position(fen_before)
-                eval_before = self.stockfish.get_evaluation().get('value', 0) / 100.0
+                eval_before = self.stockfish.get_evaluation()
                 best_move = self.stockfish.get_best_move()
                 
+                # Grok analysis if API key is available
+                grok_analysis = ""
+                if self.config['grok_api_key']:
+                    grok_analysis = self.get_grok_analysis(fen_before)
+                
+                # Store position data
+                self.analysis.positions.append(fen_before)
+                self.analysis.evaluations.append(eval_before['value'] / 100.0)
+                self.analysis.best_moves.append(best_move)
+                self.analysis.player_moves.append(move.uci())
+                
+                # Make the move
                 board.push(move)
-                fen_after = board.fen()
-                self.stockfish.set_fen_position(fen_after)
-                eval_after = self.stockfish.get_evaluation().get('value', 0) / 100.0
                 
-                centipawn_loss = abs(eval_before - eval_after) if board.turn == chess.BLACK else abs(eval_after - eval_before)
+                # Calculate position change
+                self.stockfish.set_fen_position(board.fen())
+                eval_after = self.stockfish.get_evaluation()
+                eval_diff = abs(eval_after['value'] - eval_before['value']) / 100.0
                 
-                if centipawn_loss > 3.0:
-                    blunders.append((move_number, san_move, centipawn_loss, best_move))
-                    analysis += f"Move {move_number}: {san_move} (Blunder, -{centipawn_loss:.2f} cp)\n"
-                    analysis += f"  Suggested: {board.san(board.parse_uci(best_move))}\n"
-                elif centipawn_loss < 0.5 and best_move == move.uci():
-                    brilliant_moves.append((move_number, san_move))
-                    analysis += f"Move {move_number}: {san_move} (Brilliant!)\n"
-                else:
-                    analysis += f"Move {move_number}: {san_move} ({eval_after:+.2f} cp)\n"
+                # Categorize move
+                comment = self.categorize_move(eval_diff, move.uci(), best_move)
+                self.analysis.comments.append(comment)
+                
+                if grok_analysis:
+                    comment += f"\nGrok: {grok_analysis}"
+                
+                # Update progress
+                moves_analyzed += 1
+                progress = (moves_analyzed / total_moves) * 100
+                self.message_queue.put(('progress', progress))
+                self.message_queue.put(('analysis_update', f"Move {moves_analyzed}: {san_move}\n{comment}\n"))
                 
                 node = node.variations[0]
-                move_number += 1 if board.turn == chess.WHITE else move_number
             
-            analysis += "\nSummary\n=======\n"
-            analysis += f"Blunders: {len(blunders)}\n"
-            for move_num, move, loss, best in blunders:
-                analysis += f"  Move {move_num}: {move} (-{loss:.2f} cp, suggested: {board.san(board.parse_uci(best))})\n"
-            analysis += f"Brilliant Moves: {len(brilliant_moves)}\n"
-            for move_num, move in brilliant_moves:
-                analysis += f"  Move {move_num}: {move}\n"
-            
-            self.message_queue.put(('analysis_update', analysis))
-            self.status_var.set("Analysis Complete")
-            logger.info("Game analysis completed")
+            # Calculate final statistics
+            self.calculate_statistics()
+            self.update_evaluation_graph()
+            self.message_queue.put(('analysis_complete', None))
             
         except Exception as e:
-            logger.error(f"Error analyzing game: {e}")
-            self.message_queue.put(('error', f"Analysis error: {e}"))
-            self.status_var.set("Ready")
-    
-    def update_board_svg(self, board):
+            logger.error(f"Analysis error: {e}")
+            self.message_queue.put(('error', str(e)))
+        finally:
+            self.analysis_running = False
+
+    def get_grok_analysis(self, fen):
         try:
-            svg = chess.svg.board(board, size=400)
-            with open("temp_board.svg", "w") as f:
-                f.write(svg)
-            self.board_html.set_content(open("temp_board.svg").read())
-            logger.debug("Updated SVG board")
+            headers = {
+                "Authorization": f"Bearer {self.config['grok_api_key']}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": "grok-3",
+                "prompt": f"Analyze this chess position (FEN): {fen}\nProvide a brief tactical assessment.",
+                "max_tokens": 100
+            }
+            response = requests.post(
+                "https://api.x.ai/v1/grok",
+                headers=headers,
+                json=payload,
+                timeout=10
+            )
+            if response.status_code == 200:
+                return response.json()['choices'][0]['text'].strip()
+            return ""
         except Exception as e:
-            logger.error(f"Error updating SVG board: {e}")
-    
-    def process_queue(self):
-        try:
-            while True:
-                message_type, data = self.message_queue.get_nowait()
-                if message_type == 'analysis_update':
-                    self.analysis_text.delete(1.0, tk.END)
-                    self.analysis_text.insert(tk.END, data)
-                    self.analysis_text.see(tk.END)
-                elif message_type == 'error':
-                    self.analysis_text.insert(tk.END, f"Error: {data}\n")
-                    self.analysis_text.see(tk.END)
-        except queue.Empty:
-            pass
-        self.root.after(100, self.process_queue)
-    
-    def clear_analysis(self):
-        self.analysis_text.delete(1.0, tk.END)
-    
-    def load_config(self):
-        try:
-            if os.path.exists('chess_bot_config.json'):
-                with open('chess_bot_config.json', 'r') as f:
-                    saved_config = json.load(f)
-                    self.config.update(saved_config)
-                    logger.info("Configuration loaded")
-        except Exception as e:
-            logger.error(f"Error loading config: {e}")
-    
-    def save_config(self):
-        try:
-            self.config['grok_api_key'] = self.api_key_var.get()
-            self.config['pgn_directory'] = self.pgn_dir_var.get()
-            with open('chess_bot_config.json', 'w') as f:
-                json.dump(self.config, f, indent=2)
-            logger.info("Configuration saved")
-            messagebox.showinfo("Configuration", "Configuration saved successfully!")
-        except Exception as e:
-            logger.error(f"Error saving configuration: {e}")
-            messagebox.showerror("Configuration", f"Error saving configuration: {e}")
+            logger.error(f"Grok API error: {e}")
+            return ""
+
+    def categorize_move(self, eval_diff, player_move, best_move):
+        if eval_diff > self.config['analysis_threshold']:
+            self.analysis.blunders.append(player_move)
+            return f"Blunder (-{eval_diff:.2f})"
+        elif eval_diff > self.config['mistake_threshold']:
+            self.analysis.mistakes.append(player_move)
+            return f"Mistake (-{eval_diff:.2f})"
+        elif eval_diff < self.config['brilliant_threshold'] and player_move == best_move:
+            self.analysis.brilliant_moves.append(player_move)
+            return "Brilliant move!"
+        return f"Normal move ({eval_diff:+.2f})"
+
+    def calculate_statistics(self):
+        total_moves = len(self.analysis.player_moves)
+        if total_moves == 0:
+            return
+        
+        perfect_moves = sum(1 for p, b in zip(self.analysis.player_moves, self.analysis.best_moves) if p == b)
+        self.analysis.accuracy = (perfect_moves / total_moves) * 100
+        
+        summary = f"\nGame Statistics\n===============\n"
+        summary += f"Accuracy: {self.analysis.accuracy:.1f}%\n"
+        summary += f"Brilliant moves: {len(self.analysis.brilliant_moves)}\n"
+        summary += f"Mistakes: {len(self.analysis.mistakes)}\n"
+        summary += f"Blunders: {len(self.analysis.blunders)}\n"
+        
+        self.message_queue.put(('analysis_update', summary))
+
+    def update_evaluation_graph(self):
+        self.ax.clear()
+        moves = range(len(self.analysis.evaluations))
+        evals = self.analysis.evaluations
+        
+        self.ax.plot(moves, evals, 'b-', label='Position Evaluation')
+        self.ax.axhline(y=0, color='k', linestyle='-', alpha=0.3)
+        self.ax.set_xlabel('Move Number')
+        self.ax.set_ylabel('Evaluation (pawns)')
+        self.ax.set_title('Position Evaluation Over Time')
+        self.ax.grid(True, alpha=0.3)
+        self.ax.legend()
+        
+        self.canvas.draw()
+
+    def export_analysis(self):
+        if not hasattr(self, 'analysis') or not self.analysis.evaluations:
+            messagebox.showwarning("Warning", "No analysis data to export")
+            return
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = filedialog.asksaveasfilename(
+            defaultextension=".txt",
+            initialfile=f"chess_analysis_{timestamp}.txt",
+            filetypes=[("Text files", "*.txt"), ("All files", "*.*")]
+        )
+        
+        if filename:
+            try:
+                with open(filename, 'w') as f:
+                    f.write("Chess Game Analysis Report\n")
+                    f.write("=========================\n\n")
+                    
+                    # Game details
+                    f.write("Game Details:\n")
+                    for key, value in self.pgn_game.headers.items():
+                        f.write(f"{key}: {value}\n")
+                    f.write("\n")
+                    
+                    # Move by move analysis
+                    f.write("Move Analysis:\n")
+                    for i, (eval, comment) in enumerate(zip(self.analysis.evaluations, self.analysis.comments)):
+                        f.write(f"Move {i+1}: Evaluation: {eval:+.2f} - {comment}\n")
+                    
+                    # Statistics
+                    f.write("\nStatistics:\n")
+                    f.write(f"Accuracy: {self.analysis.accuracy:.1f}%\n")
+                    f.write(f"Brilliant moves: {len(self.analysis.brilliant_moves)}\n")
+                    f.write(f"Mistakes: {len(self.analysis.mistakes)}\n")
+                    f.write(f"Blunders: {len(self.analysis.blunders)}\n")
+                
+                messagebox.showinfo("Success", "Analysis exported successfully")
+                
+            except Exception as e:
+                logger.error(f"Export error: {e}")
+                messagebox.showerror("Error", f"Failed to export analysis: {e}")
+
+    # ... (rest of the existing methods remain the same)
 
 def main():
     root = tk.Tk()
@@ -371,12 +402,8 @@ def main():
 
 if __name__ == "__main__":
     try:
-        logger.info("Reviewer application started")
+        logger.info("Enhanced Chess Game Reviewer started")
         main()
-    except KeyboardInterrupt:
-        logger.info("Reviewer stopped by user")
-        print("Reviewer stopped.")
     except Exception as e:
-        logger.error(f"Reviewer error: {e}")
-        print(f"Reviewer error: {e}")
-# End of chess_game_reviewer.py
+        logger.error(f"Application error: {e}")
+        messagebox.showerror("Error", f"Application error: {e}")
