@@ -1,0 +1,9 @@
+python-dotenv==1.0.0
+selenium==4.10.0
+chess==1.9.4
+requests==2.31.0
+tkinterhtml==0.7
+webdriver-manager==4.0.0
+Pillow==9.5.0
+opencv-python==4.8.0
+numpy==1.24.3
