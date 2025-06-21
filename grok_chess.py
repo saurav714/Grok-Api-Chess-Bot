@@ -3,6 +3,7 @@ from tkinter import ttk, messagebox
 import random
 import copy
 import time
+import zlib
 
 class ChessVsAI:
     def __init__(self):
@@ -11,6 +12,7 @@ class ChessVsAI:
             'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
         }
         self.player_side = 'white'
+        self.transposition_table = {}  # New: For storing previously evaluated positions
         self.reset_game()
         self.setup_gui()
 
@@ -36,8 +38,9 @@ class ChessVsAI:
         self.en_passant_target = None
         self.game_over = False
         self.fifty_move_counter = 0
-        self.position_history = {}  # Track position occurrences for threefold repetition
+        self.position_history = {}
         self.update_position_history()
+        self.transposition_table.clear()
 
     def setup_gui(self):
         self.root = tk.Tk()
@@ -175,7 +178,7 @@ class ChessVsAI:
         new_row = row + direction
         if self.is_valid_position(new_row, col) and self.board[new_row][col] == '.':
             moves.append((new_row, col))
-            if row == start_row and self.board[new_row + direction][col] == '.':
+            if row == start_row and self.is_valid_position(new_row + direction, col) and self.board[new_row + direction][col] == '.':
                 moves.append((new_row + direction, col))
 
         for dc in [-1, 1]:
@@ -417,25 +420,41 @@ class ChessVsAI:
                     color = self.get_piece_color(piece)
                     pieces[color].append(piece.lower())
         
-        if len(pieces['white']) == 1 and len(pieces['black']) == 1:
-            return True
-        for color in ['white', 'black']:
-            other = 'black' if color == 'white' else 'white'
-            if len(pieces[color]) == 2 and len(pieces[other]) == 1:
-                if 'b' in pieces[color] or 'n' in pieces[color]:
-                    return True
-            if len(pieces[color]) == 2 and len(pieces[other]) == 2:
-                if (('b' in pieces[color] or 'n' in pieces[color]) and
-                    ('b' in pieces[other] or 'n' in pieces[other])):
-                    return True
+        white_count = len(pieces['white'])
+        black_count = len(pieces['black'])
+        
+        if white_count <= 2 and black_count <= 2:
+            if white_count == 1 and black_count == 1:  # King vs King
+                return True
+            for color in ['white', 'black']:
+                other = 'black' if color == 'white' else 'white'
+                if len(pieces[color]) == 2:
+                    piece = [p for p in pieces[color] if p != 'k'][0]
+                    if piece in ['b', 'n']:  # King + Bishop/Knight vs King
+                        return len(pieces[other]) == 1
+                    elif piece in ['b', 'n'] and len(pieces[other]) == 2:  # King + Bishop/Knight vs King + Bishop/Knight
+                        other_piece = [p for p in pieces[other] if p != 'k'][0]
+                        if other_piece in ['b', 'n']:
+                            if piece == 'b' and other_piece == 'b':
+                                # Check if bishops are on same color squares
+                                white_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == color][0]
+                                black_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == other][0]
+                                return (white_bishop_pos[0] + white_bishop_pos[1]) % 2 == (black_bishop_pos[0] + black_bishop_pos[1]) % 2
+                            return True
         return False
 
     def is_threefold_repetition(self):
-        position_key = ''.join(''.join(row) for row in self.board)
+        position_key = self.get_position_key()
         return self.position_history.get(position_key, 0) >= 3
 
+    def get_position_key(self):
+        board_str = ''.join(''.join(row) for row in self.board)
+        castling = f"{self.white_king_moved}{self.black_king_moved}{self.white_rook_moved['left']}{self.white_rook_moved['right']}{self.black_rook_moved['left']}{self.black_rook_moved['right']}"
+        ep = str(self.en_passant_target)
+        return f"{board_str}|{castling}|{ep}|{self.current_turn}"
+
     def update_position_history(self):
-        position_key = ''.join(''.join(row) for row in self.board)
+        position_key = self.get_position_key()
         self.position_history[position_key] = self.position_history.get(position_key, 0) + 1
 
     def get_promotion_piece(self, is_white):
@@ -444,7 +463,7 @@ class ChessVsAI:
         dialog.transient(self.root)
         dialog.grab_set()
         
-        pieces = ['Queen', 'Rook', 'Bishop', 'Knight']
+        pieces = ['Queen', 'Knight', 'Rook', 'Bishop']  # Reordered for better UX
         piece_var = tk.StringVar(value='Queen')
         
         tk.Label(dialog, text="Choose promotion piece:", font=('Arial', 10)).pack(pady=5)
@@ -562,7 +581,10 @@ class ChessVsAI:
         self.board[to_row][to_col] = move_data['captured']
         
         if 'en_passant_captured' in move_data:
-            self.board[from_row][to_col] = move_data['en_passant_captured']
+            if self.is_white_piece(move_data['piece']):
+                self.board[to_row+1][to_col] = 'p'
+            else:
+                self.board[to_row-1][to_col] = 'P'
         
         if 'castling' in move_data:
             if move_data['castling'] == 'kingside':
@@ -580,13 +602,19 @@ class ChessVsAI:
                     self.board[0][0] = self.board[0][3]
                     self.board[0][3] = '.'
         
+        if 'promotion' in move_data:
+            if self.is_white_piece(move_data['piece']):
+                self.board[from_row][from_col] = 'P'
+            else:
+                self.board[from_row][from_col] = 'p'
+        
         self.en_passant_target = move_data['en_passant_target']
+        self.position_history = move_data['position_history']
         self.white_king_moved = move_data['castling_rights']['white_king_moved']
         self.black_king_moved = move_data['castling_rights']['black_king_moved']
         self.white_rook_moved = move_data['castling_rights']['white_rook_moved']
         self.black_rook_moved = move_data['castling_rights']['black_rook_moved']
         self.fifty_move_counter = move_data['fifty_move_counter']
-        self.position_history = move_data['position_history']
         
         self.current_turn = 'white' if self.current_turn == 'black' else 'black'
         self.game_over = False
@@ -595,36 +623,46 @@ class ChessVsAI:
         self.update_status()
         return True
 
-    def on_click(self, row, col):
+    def on_click(self, gui_row, gui_col):
         if self.game_over:
             return
+        
+        if self.player_side == 'black':
+            board_row = 7 - gui_row
+            board_col = gui_col
+        else:
+            board_row = gui_row
+            board_col = gui_col
         
         if (self.current_turn == 'white') != (self.player_side == 'white'):
             return
         
         if self.selected_square is None:
-            piece = self.board[row][col]
+            piece = self.board[board_row][board_col]
             if piece != '.' and self.get_piece_color(piece) == self.current_turn:
-                self.selected_square = (row, col)
+                self.selected_square = (board_row, board_col)
+                self.update_board()
+            else:
+                self.selected_square = None
                 self.update_board()
         else:
             from_row, from_col = self.selected_square
-            if (row, col) == self.selected_square:
+            if (board_row, board_col) == self.selected_square:
                 self.selected_square = None
                 self.update_board()
-            elif self.board[row][col] != '.' and self.get_piece_color(self.board[row][col]) == self.current_turn:
-                self.selected_square = (row, col)
+            elif self.board[board_row][board_col] != '.' and self.get_piece_color(self.board[board_row][board_col]) == self.current_turn:
+                self.selected_square = (board_row, board_col)
                 self.update_board()
             else:
                 legal_moves = self.get_piece_moves(from_row, from_col)
-                if (row, col) in legal_moves:
-                    if self.make_move(from_row, from_col, row, col):
+                if (board_row, board_col) in legal_moves:
+                    if self.make_move(from_row, from_col, board_row, board_col):
                         self.selected_square = None
                         self.update_board()
                         self.update_status()
                         self.check_game_end()
                         if not self.game_over and self.current_turn != self.player_side:
-                            self.root.after(100, self.ai_move)
+                            self.root.after(500, self.ai_move)
                     else:
                         messagebox.showerror("Invalid Move", "That move is not legal!")
                 self.selected_square = None
@@ -650,26 +688,36 @@ class ChessVsAI:
             self.game_over = True
 
     def update_board(self):
-        for r in range(8):
-            for c in range(8):
-                btn = self.squares[r][c]
-                piece = self.board[r][c]
-                bg_color = '#f0d9b5' if (r + c) % 2 == 0 else '#b58863'
+        for gui_r in range(8):
+            for gui_c in range(8):
+                if self.player_side == 'black':
+                    board_r = 7 - gui_r
+                    board_c = gui_c
+                else:
+                    board_r = gui_r
+                    board_c = gui_c
                 
-                if self.selected_square and self.selected_square == (r, c):
-                    bg_color = '#FFFF00'
-                elif self.selected_square:
-                    from_row, from_col = self.selected_square
-                    legal_moves = self.get_piece_moves(from_row, from_col)
-                    if (r, c) in legal_moves:
+                btn = self.squares[gui_r][gui_c]
+                piece = self.board[board_r][board_c]
+                bg_color = '#f0d9b5' if (gui_r + gui_c) % 2 == 0 else '#b58863'
+                
+                if self.selected_square:
+                    selected_r, selected_c = self.selected_square
+                    if (board_r, board_c) == (selected_r, selected_c):
+                        bg_color = '#FFFF00'
+                    
+                    legal_moves = self.get_piece_moves(selected_r, selected_c)
+                    if (board_r, board_c) in legal_moves:
                         bg_color = '#90EE90'
+                
                 if self.last_move:
                     from_r, from_c, to_r, to_c = self.last_move
-                    if (r, c) == (from_r, from_c) or (r, c) == (to_r, to_c):
+                    if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
                         bg_color = '#FFD700'
+                
                 if self.is_in_check(self.current_turn):
                     king_pos = self.find_king(self.current_turn)
-                    if king_pos and (r, c) == king_pos:
+                    if king_pos and (board_r, board_c) == king_pos:
                         bg_color = '#FF6B6B'
                 
                 btn.config(text=self.PIECES.get(piece, ''), bg=bg_color)
@@ -699,7 +747,7 @@ class ChessVsAI:
             return
         start_time = time.time()
         move = self.minimax(3, self.current_turn, -float('inf'), float('inf'))[1]
-        if time.time() - start_time > 2:  # Warn if AI takes too long
+        if time.time() - start_time > 2:
             print("AI move took", time.time() - start_time, "seconds")
         if move:
             from_r, from_c, to_r, to_c = move
@@ -709,11 +757,19 @@ class ChessVsAI:
             self.check_game_end()
 
     def minimax(self, depth, color, alpha, beta):
+        position_key = zlib.crc32(self.get_position_key().encode())
+        if position_key in self.transposition_table:
+            tt_entry = self.transposition_table[position_key]
+            if tt_entry['depth'] >= depth:
+                return tt_entry['score'], tt_entry['best_move']
+        
         if depth == 0 or self.is_checkmate(color) or self.is_stalemate(color) or self.is_insufficient_material() or self.is_threefold_repetition():
-            return self.evaluate_board(), None
+            score = self.evaluate_board()
+            return score, None
         
         moves = self.get_all_moves(color)
-        random.shuffle(moves)  # Randomize for variety in equal-score moves
+        # Order moves: captures first, then checks, then others
+        moves = self.order_moves(moves)
         
         best_move = None
         if color == self.current_turn:
@@ -726,7 +782,9 @@ class ChessVsAI:
                 self.board[to_r][to_c] = moving_piece
                 self.board[from_r][from_c] = '.'
                 self.current_turn = 'black' if color == 'white' else 'white'
-                eval_score = self.minimax(depth - 1, self.current_turn, alpha, beta)[0]
+                
+                eval_score, _ = self.minimax(depth - 1, self.current_turn, alpha, beta)
+                
                 self.current_turn = color
                 self.board[from_r][from_c] = moving_piece
                 self.board[to_r][to_c] = original_piece
@@ -737,6 +795,12 @@ class ChessVsAI:
                 alpha = max(alpha, eval_score)
                 if beta <= alpha:
                     break
+            
+            self.transposition_table[position_key] = {
+                'score': max_eval,
+                'best_move': best_move,
+                'depth': depth
+            }
             return max_eval, best_move
         else:
             min_eval = float('inf')
@@ -748,7 +812,9 @@ class ChessVsAI:
                 self.board[to_r][to_c] = moving_piece
                 self.board[from_r][from_c] = '.'
                 self.current_turn = 'black' if color == 'white' else 'white'
-                eval_score = self.minimax(depth - 1, self.current_turn, alpha, beta)[0]
+                
+                eval_score, _ = self.minimax(depth - 1, self.current_turn, alpha, beta)
+                
                 self.current_turn = color
                 self.board[from_r][from_c] = moving_piece
                 self.board[to_r][to_c] = original_piece
@@ -759,57 +825,149 @@ class ChessVsAI:
                 beta = min(beta, eval_score)
                 if beta <= alpha:
                     break
+            
+            self.transposition_table[position_key] = {
+                'score': min_eval,
+                'best_move': best_move,
+                'depth': depth
+            }
             return min_eval, best_move
 
+    def order_moves(self, moves):
+        piece_values = {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 200}
+        ordered_moves = []
+        
+        for move in moves:
+            from_r, from_c, to_r, to_c = move
+            score = 0
+            
+            # Prioritize captures
+            if self.board[to_r][to_c] != '.':
+                captured_value = piece_values.get(self.board[to_r][to_c].lower(), 0)
+                moving_value = piece_values.get(self.board[from_r][from_c].lower(), 0)
+                score += 10 * captured_value - moving_value  # MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
+            
+            # Prioritize checks
+            original_piece = self.board[to_r][to_c]
+            moving_piece = self.board[from_r][from_c]
+            self.board[to_r][to_c] = moving_piece
+            self.board[from_r][from_c] = '.'
+            opponent_color = 'black' if self.current_turn == 'white' else 'white'
+            if self.is_in_check(opponent_color):
+                score += 50
+            self.board[from_r][from_c] = moving_piece
+            self.board[to_r][to_c] = original_piece
+            
+            # Prioritize pawn promotions
+            if self.board[from_r][from_c].lower() == 'p' and (to_r == 0 or to_r == 7):
+                score += 100
+            
+            ordered_moves.append((move, score))
+        
+        ordered_moves.sort(key=lambda x: x[1], reverse=True)
+        return [move[0] for move in ordered_moves]
+
     def evaluate_board(self):
-        piece_values = {'p': 1, 'n': 3.2, 'b': 3.3, 'r': 5, 'q': 9, 'k': 200}
+        piece_values = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
+        
+        # Piece-square tables for better positional evaluation
+        pawn_table = [
+            0,  0,  0,  0,  0,  0,  0,  0,
+            50, 50, 50, 50, 50, 50, 50, 50,
+            10, 10, 20, 30, 30, 20, 10, 10,
+            5,  5, 10, 25, 25, 10,  5,  5,
+            0,  0,  0, 20, 20,  0,  0,  0,
+            5, -5,-10,  0,  0,-10, -5,  5,
+            5, 10, 10,-20,-20, 10, 10,  5,
+            0,  0,  0,  0,  0,  0,  0,  0
+        ]
+        
+        knight_table = [
+            -50,-40,-30,-30,-30,-30,-40,-50,
+            -40,-20,  0,  0,  0,  0,-20,-40,
+            -30,  0, 10, 15, 15, 10,  0,-30,
+            -30,  5, 15, 20, 20, 15,  5,-30,
+            -30,  0, 15, 20, 20, 15,  0,-30,
+            -30,  5, 10, 15, 15, 10,  5,-30,
+            -40,-20,  0,  5,  5,  0,-20,-40,
+            -50,-40,-30,-30,-30,-30,-40,-50
+        ]
+        
+        bishop_table = [
+            -20,-10,-10,-10,-10,-10,-10,-20,
+            -10,  0,  0,  0,  0,  0,  0,-10,
+            -10,  0,  5, 10, 10,  5,  0,-10,
+            -10,  5,  5, 10, 10,  5,  5,-10,
+            -10,  0, 10, 10, 10, 10,  0,-10,
+            -10, 10, 10,  5,  5, 10, 10,-10,
+            -10,  5,  0,  0,  0,  0,  5,-10,
+            -20,-10,-10,-10,-10,-10,-10,-20
+        ]
+        
         score = 0
         
-        # Piece values and positional bonuses
         for r in range(8):
             for c in range(8):
                 piece = self.board[r][c]
                 if piece != '.':
                     value = piece_values.get(piece.lower(), 0)
-                    if self.is_white_piece(piece):
-                        score += value
-                        if piece.lower() == 'p' and r < 3:  # Advanced pawns
-                            score += 0.3
-                        if piece.lower() in ['n', 'b', 'r', 'q'] and 2 <= r <= 5 and 2 <= c <= 5:  # Center control
-                            score += 0.5
+                    idx = r * 8 + c
+                    if piece.lower() == 'p':
+                        pos_bonus = pawn_table[idx] if self.is_white_piece(piece) else pawn_table[(7-r)*8+c]
+                    elif piece.lower() == 'n':
+                        pos_bonus = knight_table[idx] if self.is_white_piece(piece) else knight_table[(7-r)*8+c]
+                    elif piece.lower() == 'b':
+                        pos_bonus = bishop_table[idx] if self.is_white_piece(piece) else bishop_table[(7-r)*8+c]
                     else:
-                        score -= value
-                        if piece.lower() == 'p' and r > 4:  # Advanced pawns
-                            score -= 0.3
-                        if piece.lower() in ['n', 'b', 'r', 'q'] and 2 <= r <= 5 and 2 <= c <= 5:
-                            score -= 0.5
+                        pos_bonus = 0
+                        
+                    if self.is_white_piece(piece):
+                        score += value + pos_bonus
+                    else:
+                        score -= value + pos_bonus
         
-        # Mobility: reward more legal moves
+        # Mobility bonus
         white_moves = len(self.get_all_moves('white'))
         black_moves = len(self.get_all_moves('black'))
-        score += (white_moves - black_moves) * 0.1
+        score += (white_moves - black_moves) * 5
         
-        # King safety: penalize exposed kings
+        # King safety
         white_king = self.find_king('white')
         black_king = self.find_king('black')
         if white_king:
             r, c = white_king
-            if r > 5 and c in [2, 3, 4, 5]:
-                score -= 0.5  # King not on back rank
+            # Penalize king on open files
+            if not any(self.board[i][c] == 'P' for i in range(r)):
+                score -= 20
+            # Penalize king in center in opening/middlegame
+            if len(self.move_history) < 20 and c in [3, 4]:
+                score -= 15
         if black_king:
             r, c = black_king
-            if r < 2 and c in [2, 3, 4, 5]:
-                score += 0.5
+            if not any(self.board[i][c] == 'p' for i in range(r+1, 8)):
+                score += 20
+            if len(self.move_history) < 20 and c in [3, 4]:
+                score += 15
         
-        # Game-ending conditions
+        # Pawn structure
+        for c in range(8):
+            white_pawns = sum(1 for r in range(8) if self.board[r][c] == 'P')
+            black_pawns = sum(1 for r in range(8) if self.board[r][c] == 'p')
+            # Penalize doubled pawns
+            if white_pawns > 1:
+                score -= 10 * (white_pawns - 1)
+            if black_pawns > 1:
+                score += 10 * (black_pawns - 1)
+        
+        # Terminal conditions
         if self.is_checkmate('white'):
-            score -= 1000
+            score -= 1000000
         elif self.is_checkmate('black'):
-            score += 1000
+            score += 1000000
         elif self.is_in_check('white'):
-            score -= 2
+            score -= 50
         elif self.is_in_check('black'):
-            score += 2
+            score += 50
         
         return score
 
