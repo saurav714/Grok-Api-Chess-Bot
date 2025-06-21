@@ -13,6 +13,8 @@ class ChessVsAI:
         }
         self.player_side = 'white'
         self.transposition_table = {}
+        self.review_mode = False
+        self.current_review_move = 0
         self.reset_game()
         self.setup_gui()
 
@@ -39,6 +41,9 @@ class ChessVsAI:
         self.game_over = False
         self.fifty_move_counter = 0
         self.position_history = {}
+        self.review_mode = False
+        self.current_review_move = 0
+        self.board_history = [copy.deepcopy(self.board)]
         self.update_position_history()
         self.transposition_table.clear()
 
@@ -58,18 +63,15 @@ class ChessVsAI:
                               fg='#ecf0f1', bg='#2c3e50')
         title_label.pack(pady=(0, 10))
 
-        # Create a horizontal container for board and controls
         content_frame = tk.Frame(main_frame, bg='#2c3e50')
         content_frame.pack(expand=True, fill='both')
 
-        # Board frame (left side)
         self.board_container = tk.Frame(content_frame, bg='#34495e')
         self.board_container.pack(side='left', padx=(0, 10), expand=True, fill='both')
         
         self.board_frame = tk.Frame(self.board_container, bg='#34495e')
         self.board_frame.pack(expand=True, fill='both')
 
-        # Control panel (right side)
         self.control_panel = tk.Frame(content_frame, bg='#2c3e50', width=150)
         self.control_panel.pack(side='right', fill='y', padx=(10, 0))
         self.control_panel.pack_propagate(False)
@@ -82,17 +84,7 @@ class ChessVsAI:
         self.control_frame = tk.Frame(self.control_panel, bg='#2c3e50')
         self.control_frame.pack(pady=5)
 
-        btn_style = {'font': ('Arial', 8), 'bg': '#3498db', 'fg': 'white', 
-                    'relief': 'flat', 'padx': 10, 'pady': 3, 'width': 12}
-
-        tk.Button(self.control_frame, text="New Game", 
-                 command=self.new_game, **btn_style).pack(pady=3)
-        tk.Button(self.control_frame, text="Switch Side", 
-                 command=self.switch_side, **btn_style).pack(pady=3)
-        tk.Button(self.control_frame, text="Undo Move", 
-                 command=self.undo_move, **btn_style).pack(pady=3)
-        tk.Button(self.control_frame, text="Resign", 
-                 command=self.resign, **btn_style).pack(pady=3)
+        self.setup_control_buttons()
 
         self.history_label = tk.Label(self.control_panel, text="Move History: ", 
                                     font=('Arial', 8), 
@@ -107,6 +99,30 @@ class ChessVsAI:
         self.update_board()
         if self.player_side == 'black':
             self.root.after(500, self.ai_move)
+
+    def setup_control_buttons(self):
+        for widget in self.control_frame.winfo_children():
+            widget.destroy()
+
+        btn_style = {'font': ('Arial', 8), 'bg': '#3498db', 'fg': 'white', 
+                    'relief': 'flat', 'padx': 10, 'pady': 3, 'width': 12}
+
+        if not self.review_mode:
+            tk.Button(self.control_frame, text="New Game", 
+                     command=self.new_game, **btn_style).pack(pady=3)
+            tk.Button(self.control_frame, text="Switch Side", 
+                     command=self.switch_side, **btn_style).pack(pady=3)
+            tk.Button(self.control_frame, text="Undo Move", 
+                     command=self.undo_move, **btn_style).pack(pady=3)
+            tk.Button(self.control_frame, text="Resign", 
+                     command=self.resign, **btn_style).pack(pady=3)
+        else:
+            tk.Button(self.control_frame, text="Previous", 
+                     command=self.prev_move, **btn_style).pack(pady=3)
+            tk.Button(self.control_frame, text="Next", 
+                     command=self.next_move, **btn_style).pack(pady=3)
+            tk.Button(self.control_frame, text="New Game", 
+                     command=self.new_game, **btn_style).pack(pady=3)
 
     def create_board(self):
         for r in range(8):
@@ -574,6 +590,7 @@ class ChessVsAI:
         self.board[from_row][from_col] = '.'
         
         self.move_history.append(move_data)
+        self.board_history.append(copy.deepcopy(self.board))
         self.update_position_history()
         
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
@@ -582,10 +599,11 @@ class ChessVsAI:
         return True
 
     def undo_move(self):
-        if not self.move_history:
+        if not self.move_history or self.review_mode:
             return False
         
         move_data = self.move_history.pop()
+        self.board_history.pop()
         from_row, from_col = move_data['from']
         to_row, to_col = move_data['to']
         
@@ -640,9 +658,10 @@ class ChessVsAI:
             winner = 'Black' if self.player_side == 'white' else 'White'
             self.status_label.config(text=f"You resigned! {winner} wins!")
             self.game_over = True
+            self.enter_review_mode()
 
     def on_click(self, gui_row, gui_col):
-        if self.game_over:
+        if self.game_over or self.review_mode:
             return
         
         if self.player_side == 'black':
@@ -692,18 +711,42 @@ class ChessVsAI:
             winner = 'Black' if current_color == 'white' else 'White'
             self.status_label.config(text=f"Checkmate! {winner} wins!")
             self.game_over = True
+            self.enter_review_mode()
         elif self.is_stalemate(current_color):
             self.status_label.config(text="Stalemate! Draw!")
             self.game_over = True
+            self.enter_review_mode()
         elif self.fifty_move_counter >= 100:
             self.status_label.config(text="Draw by 50-move rule!")
             self.game_over = True
+            self.enter_review_mode()
         elif self.is_insufficient_material():
             self.status_label.config(text="Draw by insufficient material!")
             self.game_over = True
+            self.enter_review_mode()
         elif self.is_threefold_repetition():
             self.status_label.config(text="Draw by threefold repetition!")
             self.game_over = True
+            self.enter_review_mode()
+
+    def enter_review_mode(self):
+        self.review_mode = True
+        self.current_review_move = len(self.move_history)
+        self.setup_control_buttons()
+        self.update_board()
+        self.update_status()
+
+    def prev_move(self):
+        if self.current_review_move > 0:
+            self.current_review_move -= 1
+            self.update_board()
+            self.update_status()
+
+    def next_move(self):
+        if self.current_review_move < len(self.move_history):
+            self.current_review_move += 1
+            self.update_board()
+            self.update_status()
 
     def update_board(self):
         for gui_r in range(8):
@@ -716,52 +759,87 @@ class ChessVsAI:
                     board_c = gui_c
                 
                 btn = self.squares[gui_r][gui_c]
-                piece = self.board[board_r][board_c]
+                if self.review_mode:
+                    board_state = self.board_history[self.current_review_move]
+                    piece = board_state[board_r][board_c]
+                else:
+                    piece = self.board[board_r][board_c]
                 bg_color = '#f0d9b5' if (gui_r + gui_c) % 2 == 0 else '#b58863'
                 
-                if self.selected_square:
-                    selected_r, selected_c = self.selected_square
-                    if (board_r, board_c) == (selected_r, selected_c):
-                        bg_color = '#FFFF00'
+                if not self.review_mode:
+                    if self.selected_square:
+                        selected_r, selected_c = self.selected_square
+                        if (board_r, board_c) == (selected_r, selected_c):
+                            bg_color = '#FFFF00'
+                        
+                        legal_moves = self.get_piece_moves(selected_r, selected_c)
+                        if (board_r, board_c) in legal_moves:
+                            bg_color = '#90EE90'
                     
-                    legal_moves = self.get_piece_moves(selected_r, selected_c)
-                    if (board_r, board_c) in legal_moves:
-                        bg_color = '#90EE90'
-                
-                if self.last_move:
-                    from_r, from_c, to_r, to_c = self.last_move
-                    if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
-                        bg_color = '#FFD700'
-                
-                if self.is_in_check(self.current_turn):
-                    king_pos = self.find_king(self.current_turn)
-                    if king_pos and (board_r, board_c) == king_pos:
-                        bg_color = '#FF6B6B'
+                    if self.last_move:
+                        from_r, from_c, to_r, to_c = self.last_move
+                        if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
+                            bg_color = '#FFD700'
+                    
+                    if self.is_in_check(self.current_turn):
+                        king_pos = self.find_king(self.current_turn)
+                        if king_pos and (board_r, board_c) == king_pos:
+                            bg_color = '#FF6B6B'
+                else:
+                    if self.current_review_move > 0:
+                        move = self.move_history[self.current_review_move - 1]
+                        from_r, from_c = move['from']
+                        to_r, to_c = move['to']
+                        if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
+                            bg_color = '#FFD700'
                 
                 btn.config(text=self.PIECES.get(piece, ''), bg=bg_color)
 
     def update_status(self):
-        if self.game_over:
-            return
-        status = f"{self.current_turn.title()}'s turn"
-        if self.is_in_check(self.current_turn):
-            status += " - CHECK!"
-        self.status_label.config(text=status)
-        
-        if self.move_history:
-            recent_moves = self.move_history[-5:]
-            history_text = "Recent moves:\n" + "\n".join([
-                f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
-                for move in recent_moves
-            ])
-            self.history_label.config(text=history_text)
+        if self.review_mode:
+            if self.current_review_move == len(self.move_history):
+                status = self.status_label.cget("text")  # Keep final game result
+            else:
+                move_num = (self.current_review_move + 1) // 2 + 1
+                color = 'White' if self.current_review_move % 2 == 0 else 'Black'
+                move = self.move_history[self.current_review_move - 1] if self.current_review_move > 0 else None
+                move_text = f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" if move else "Start"
+                status = f"Review: Move {move_num} ({color}) - {move_text}"
+            self.status_label.config(text=status)
+            
+            if self.move_history:
+                start_idx = max(0, self.current_review_move - 2)
+                end_idx = min(len(self.move_history), self.current_review_move + 3)
+                recent_moves = self.move_history[start_idx:end_idx]
+                history_text = "Move History:\n" + "\n".join([
+                    f"{(i+1)//2 + 1}. {self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
+                    for i, move in enumerate(recent_moves, start=start_idx)
+                ])
+                self.history_label.config(text=history_text)
+            else:
+                self.history_label.config(text="Move History: None")
+        else:
+            if self.game_over:
+                return
+            status = f"{self.current_turn.title()}'s turn"
+            if self.is_in_check(self.current_turn):
+                status += " - CHECK!"
+            self.status_label.config(text=status)
+            
+            if self.move_history:
+                recent_moves = self.move_history[-5:]
+                history_text = "Move History:\n" + "\n".join([
+                    f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
+                    for move in recent_moves
+                ])
+                self.history_label.config(text=history_text)
 
     def square_to_notation(self, pos):
         row, col = pos
         return chr(ord('a') + col) + str(8 - row)
 
     def ai_move(self):
-        if self.game_over or self.current_turn == self.player_side:
+        if self.game_over or self.current_turn == self.player_side or self.review_mode:
             return
         start_time = time.time()
         move = self.minimax(3, self.current_turn, -float('inf'), float('inf'))[1]
@@ -990,6 +1068,7 @@ class ChessVsAI:
 
     def new_game(self):
         self.reset_game()
+        self.setup_control_buttons()
         self.update_board()
         self.update_status()
         if self.player_side == 'black':
