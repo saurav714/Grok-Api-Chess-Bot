@@ -1,2 +1,0 @@
-# Grok-Api-Chess-Bot
-
