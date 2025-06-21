@@ -12,7 +12,7 @@ class ChessVsAI:
             'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
         }
         self.player_side = 'white'
-        self.transposition_table = {}  # New: For storing previously evaluated positions
+        self.transposition_table = {}
         self.reset_game()
         self.setup_gui()
 
@@ -46,9 +46,9 @@ class ChessVsAI:
         self.root = tk.Tk()
         self.root.title("Chess vs AI")
         self.root.configure(bg='#2c3e50')
-        self.root.geometry("500x600")
+        self.root.geometry("700x600")
         self.root.resizable(True, True)
-        self.root.minsize(400, 400)
+        self.root.minsize(600, 400)
 
         main_frame = tk.Frame(self.root, bg='#2c3e50')
         main_frame.pack(padx=10, pady=10, expand=True, fill='both')
@@ -58,34 +58,46 @@ class ChessVsAI:
                               fg='#ecf0f1', bg='#2c3e50')
         title_label.pack(pady=(0, 10))
 
-        self.board_container = tk.Frame(main_frame, bg='#34495e')
-        self.board_container.pack(pady=5, expand=True, fill='both')
+        # Create a horizontal container for board and controls
+        content_frame = tk.Frame(main_frame, bg='#2c3e50')
+        content_frame.pack(expand=True, fill='both')
+
+        # Board frame (left side)
+        self.board_container = tk.Frame(content_frame, bg='#34495e')
+        self.board_container.pack(side='left', padx=(0, 10), expand=True, fill='both')
         
         self.board_frame = tk.Frame(self.board_container, bg='#34495e')
         self.board_frame.pack(expand=True, fill='both')
-        
-        self.status_label = tk.Label(main_frame, text="Your move", 
+
+        # Control panel (right side)
+        self.control_panel = tk.Frame(content_frame, bg='#2c3e50', width=150)
+        self.control_panel.pack(side='right', fill='y', padx=(10, 0))
+        self.control_panel.pack_propagate(False)
+
+        self.status_label = tk.Label(self.control_panel, text="Your move", 
                                    font=('Arial', 12), 
                                    fg='#ecf0f1', bg='#2c3e50')
-        self.status_label.pack(pady=5)
+        self.status_label.pack(pady=(0, 10))
 
-        self.control_frame = tk.Frame(main_frame, bg='#2c3e50')
+        self.control_frame = tk.Frame(self.control_panel, bg='#2c3e50')
         self.control_frame.pack(pady=5)
 
         btn_style = {'font': ('Arial', 8), 'bg': '#3498db', 'fg': 'white', 
-                    'relief': 'flat', 'padx': 10, 'pady': 3}
+                    'relief': 'flat', 'padx': 10, 'pady': 3, 'width': 12}
 
         tk.Button(self.control_frame, text="New Game", 
-                 command=self.new_game, **btn_style).pack(side='left', padx=3)
+                 command=self.new_game, **btn_style).pack(pady=3)
         tk.Button(self.control_frame, text="Switch Side", 
-                 command=self.switch_side, **btn_style).pack(side='left', padx=3)
+                 command=self.switch_side, **btn_style).pack(pady=3)
         tk.Button(self.control_frame, text="Undo Move", 
-                 command=self.undo_move, **btn_style).pack(side='left', padx=3)
+                 command=self.undo_move, **btn_style).pack(pady=3)
+        tk.Button(self.control_frame, text="Resign", 
+                 command=self.resign, **btn_style).pack(pady=3)
 
-        self.history_label = tk.Label(main_frame, text="Move History: ", 
+        self.history_label = tk.Label(self.control_panel, text="Move History: ", 
                                     font=('Arial', 8), 
-                                    fg='#bdc3c7', bg='#2c3e50')
-        self.history_label.pack(pady=(5, 0))
+                                    fg='#bdc3c7', bg='#2c3e50', wraplength=140, justify='left')
+        self.history_label.pack(pady=(10, 0))
 
         self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.create_board()
@@ -339,7 +351,8 @@ class ChessVsAI:
         row_step = 0 if row_diff == 0 else (1 if row_diff > 0 else -1)
         col_step = 0 if col_diff == 0 else (1 if col_diff > 0 else -1)
         
-        current_row, current_col = from_row + row_step, from_col + col_step
+        current_row = from_row + row_step
+        current_col = from_col + col_step
         
         while (current_row, current_col) != (to_row, to_col):
             if self.board[current_row][current_col] != '.':
@@ -436,7 +449,6 @@ class ChessVsAI:
                         other_piece = [p for p in pieces[other] if p != 'k'][0]
                         if other_piece in ['b', 'n']:
                             if piece == 'b' and other_piece == 'b':
-                                # Check if bishops are on same color squares
                                 white_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == color][0]
                                 black_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == other][0]
                                 return (white_bishop_pos[0] + white_bishop_pos[1]) % 2 == (black_bishop_pos[0] + black_bishop_pos[1]) % 2
@@ -463,7 +475,7 @@ class ChessVsAI:
         dialog.transient(self.root)
         dialog.grab_set()
         
-        pieces = ['Queen', 'Knight', 'Rook', 'Bishop']  # Reordered for better UX
+        pieces = ['Queen', 'Rook', 'Knight', 'Bishop']
         piece_var = tk.StringVar(value='Queen')
         
         tk.Label(dialog, text="Choose promotion piece:", font=('Arial', 10)).pack(pady=5)
@@ -473,7 +485,7 @@ class ChessVsAI:
         
         self.root.wait_window(dialog)
         
-        piece_map = {'Queen': 'Q', 'Rook': 'R', 'Bishop': 'B', 'Knight': 'N'}
+        piece_map = {'Queen': 'Q', 'Rook': 'R', 'Knight': 'N', 'Bishop': 'B'}
         selected = piece_map[piece_var.get()]
         return selected if is_white else selected.lower()
 
@@ -582,9 +594,9 @@ class ChessVsAI:
         
         if 'en_passant_captured' in move_data:
             if self.is_white_piece(move_data['piece']):
-                self.board[to_row+1][to_col] = 'p'
+                self.board[to_row + 1][to_col] = 'p'
             else:
-                self.board[to_row-1][to_col] = 'P'
+                self.board[to_row - 1][to_col] = 'P'
         
         if 'castling' in move_data:
             if move_data['castling'] == 'kingside':
@@ -622,6 +634,12 @@ class ChessVsAI:
         self.update_board()
         self.update_status()
         return True
+
+    def resign(self):
+        if not self.game_over:
+            winner = 'Black' if self.player_side == 'white' else 'White'
+            self.status_label.config(text=f"You resigned! {winner} wins!")
+            self.game_over = True
 
     def on_click(self, gui_row, gui_col):
         if self.game_over:
@@ -664,7 +682,7 @@ class ChessVsAI:
                         if not self.game_over and self.current_turn != self.player_side:
                             self.root.after(500, self.ai_move)
                     else:
-                        messagebox.showerror("Invalid Move", "That move is not legal!")
+                        messagebox.showinfo("Invalid Move", "That move is not legal!")
                 self.selected_square = None
                 self.update_board()
 
@@ -732,7 +750,7 @@ class ChessVsAI:
         
         if self.move_history:
             recent_moves = self.move_history[-5:]
-            history_text = "Recent moves: " + ", ".join([
+            history_text = "Recent moves:\n" + "\n".join([
                 f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
                 for move in recent_moves
             ])
@@ -768,7 +786,6 @@ class ChessVsAI:
             return score, None
         
         moves = self.get_all_moves(color)
-        # Order moves: captures first, then checks, then others
         moves = self.order_moves(moves)
         
         best_move = None
@@ -841,13 +858,11 @@ class ChessVsAI:
             from_r, from_c, to_r, to_c = move
             score = 0
             
-            # Prioritize captures
             if self.board[to_r][to_c] != '.':
                 captured_value = piece_values.get(self.board[to_r][to_c].lower(), 0)
                 moving_value = piece_values.get(self.board[from_r][from_c].lower(), 0)
-                score += 10 * captured_value - moving_value  # MVV-LVA (Most Valuable Victim - Least Valuable Attacker)
+                score += 10 * captured_value - moving_value
             
-            # Prioritize checks
             original_piece = self.board[to_r][to_c]
             moving_piece = self.board[from_r][from_c]
             self.board[to_r][to_c] = moving_piece
@@ -858,7 +873,6 @@ class ChessVsAI:
             self.board[from_r][from_c] = moving_piece
             self.board[to_r][to_c] = original_piece
             
-            # Prioritize pawn promotions
             if self.board[from_r][from_c].lower() == 'p' and (to_r == 0 or to_r == 7):
                 score += 100
             
@@ -870,7 +884,6 @@ class ChessVsAI:
     def evaluate_board(self):
         piece_values = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
         
-        # Piece-square tables for better positional evaluation
         pawn_table = [
             0,  0,  0,  0,  0,  0,  0,  0,
             50, 50, 50, 50, 50, 50, 50, 50,
@@ -926,20 +939,16 @@ class ChessVsAI:
                     else:
                         score -= value + pos_bonus
         
-        # Mobility bonus
         white_moves = len(self.get_all_moves('white'))
         black_moves = len(self.get_all_moves('black'))
         score += (white_moves - black_moves) * 5
         
-        # King safety
         white_king = self.find_king('white')
         black_king = self.find_king('black')
         if white_king:
             r, c = white_king
-            # Penalize king on open files
             if not any(self.board[i][c] == 'P' for i in range(r)):
                 score -= 20
-            # Penalize king in center in opening/middlegame
             if len(self.move_history) < 20 and c in [3, 4]:
                 score -= 15
         if black_king:
@@ -949,17 +958,14 @@ class ChessVsAI:
             if len(self.move_history) < 20 and c in [3, 4]:
                 score += 15
         
-        # Pawn structure
         for c in range(8):
             white_pawns = sum(1 for r in range(8) if self.board[r][c] == 'P')
             black_pawns = sum(1 for r in range(8) if self.board[r][c] == 'p')
-            # Penalize doubled pawns
             if white_pawns > 1:
                 score -= 10 * (white_pawns - 1)
             if black_pawns > 1:
                 score += 10 * (black_pawns - 1)
         
-        # Terminal conditions
         if self.is_checkmate('white'):
             score -= 1000000
         elif self.is_checkmate('black'):
