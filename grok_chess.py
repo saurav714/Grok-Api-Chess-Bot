@@ -1,9 +1,13 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
-import random
+import chess
 import copy
 import time
-import zlib
+import ollama
+import threading
+import random
+import os
+from dotenv import load_dotenv
 
 class ChessVsAI:
     def __init__(self):
@@ -13,118 +17,180 @@ class ChessVsAI:
         }
         self.player_side = 'white'
         self.transposition_table = {}
-        self.review_mode = False
-        self.current_review_move = 0
-        self.reset_game()
+        self.ai_thinking = False  # Prevent multiple AI moves
+        
+        # Load environment variables first
+        load_dotenv()
+        
+        # Ollama configuration
+        self.ollama_model = os.getenv("OLLAMA_MODEL", "phi3")
+        self.ollama_timeout = float(os.getenv("OLLAMA_TIMEOUT", "5.0"))
+        
+        # Initialize GUI components
+        self.squares = [[None for _ in range(8)] for _ in range(8)]
         self.setup_gui()
+        self.reset_game()
 
     def reset_game(self):
-        self.board = [
-            ['r','n','b','q','k','b','n','r'],
-            ['p','p','p','p','p','p','p','p'],
-            ['.','.','.','.','.','.','.','.'],
-            ['.','.','.','.','.','.','.','.'],
-            ['.','.','.','.','.','.','.','.'],
-            ['.','.','.','.','.','.','.','.'],
-            ['P','P','P','P','P','P','P','P'],
-            ['R','N','B','Q','K','B','N','R']
-        ]
+        """Reset the game state"""
+        self.chess_board = chess.Board()
         self.move_history = []
+        self.board_history = [copy.deepcopy(self.chess_board)]
         self.selected_square = None
         self.last_move = None
         self.current_turn = 'white'
-        self.white_king_moved = False
-        self.black_king_moved = False
-        self.white_rook_moved = {'left': False, 'right': False}
-        self.black_rook_moved = {'left': False, 'right': False}
-        self.en_passant_target = None
         self.game_over = False
-        self.fifty_move_counter = 0
-        self.position_history = {}
-        self.review_mode = False
-        self.current_review_move = 0
-        self.board_history = [copy.deepcopy(self.board)]
-        self.update_position_history()
+        self.ai_thinking = False
         self.transposition_table.clear()
+        
+        if hasattr(self, 'root'):
+            self.update_board()
+            self.update_status()
 
     def setup_gui(self):
+        """Initialize the GUI"""
         self.root = tk.Tk()
-        self.root.title("Chess vs AI")
+        self.root.title("Chess vs AI with LLM")
         self.root.configure(bg='#2c3e50')
-        self.root.geometry("700x600")
+        self.root.geometry("900x700")
         self.root.resizable(True, True)
-        self.root.minsize(600, 400)
+        self.root.minsize(700, 500)
 
+        # Main container
         main_frame = tk.Frame(self.root, bg='#2c3e50')
         main_frame.pack(padx=10, pady=10, expand=True, fill='both')
 
-        title_label = tk.Label(main_frame, text="♔ Chess vs AI ♚", 
-                              font=('Arial', 18, 'bold'), 
-                              fg='#ecf0f1', bg='#2c3e50')
-        title_label.pack(pady=(0, 10))
+        # Title
+        title_label = tk.Label(
+            main_frame, 
+            text="♔ Chess vs AI ♚", 
+            font=('Arial', 20, 'bold'), 
+            fg='#ecf0f1', 
+            bg='#2c3e50'
+        )
+        title_label.pack(pady=(0, 15))
 
+        # Content frame
         content_frame = tk.Frame(main_frame, bg='#2c3e50')
         content_frame.pack(expand=True, fill='both')
 
-        self.board_container = tk.Frame(content_frame, bg='#34495e')
-        self.board_container.pack(side='left', padx=(0, 10), expand=True, fill='both')
+        # Board container
+        self.board_container = tk.Frame(content_frame, bg='#34495e', relief='raised', bd=2)
+        self.board_container.pack(side='left', padx=(0, 15), expand=True, fill='both')
         
         self.board_frame = tk.Frame(self.board_container, bg='#34495e')
-        self.board_frame.pack(expand=True, fill='both')
+        self.board_frame.pack(expand=True, fill='both', padx=10, pady=10)
 
-        self.control_panel = tk.Frame(content_frame, bg='#2c3e50', width=150)
-        self.control_panel.pack(side='right', fill='y', padx=(10, 0))
+        # Control panel
+        self.control_panel = tk.Frame(content_frame, bg='#2c3e50', width=250)
+        self.control_panel.pack(side='right', fill='y')
         self.control_panel.pack_propagate(False)
 
-        self.status_label = tk.Label(self.control_panel, text="Your move", 
-                                   font=('Arial', 12), 
-                                   fg='#ecf0f1', bg='#2c3e50')
-        self.status_label.pack(pady=(0, 10))
-
-        self.control_frame = tk.Frame(self.control_panel, bg='#2c3e50')
-        self.control_frame.pack(pady=5)
-
+        # Status panel
+        self.setup_status_panel()
         self.setup_control_buttons()
+        self.setup_analysis_panel()
 
-        self.history_label = tk.Label(self.control_panel, text="Move History: ", 
-                                    font=('Arial', 8), 
-                                    fg='#bdc3c7', bg='#2c3e50', wraplength=140, justify='left')
-        self.history_label.pack(pady=(10, 0))
-
-        self.squares = [[None for _ in range(8)] for _ in range(8)]
+        # Create the chess board
         self.create_board()
         
+        # Bind events
         self.root.bind('<Configure>', self.on_window_resize)
+        self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
 
-        self.update_board()
+        # Start AI move if player is black
         if self.player_side == 'black':
-            self.root.after(500, self.ai_move)
+            self.root.after(1000, self.ai_move)
+
+    def setup_status_panel(self):
+        """Setup the status panel"""
+        status_frame = tk.Frame(self.control_panel, bg='#2c3e50')
+        status_frame.pack(fill='x', pady=(0, 15))
+
+        self.status_label = tk.Label(
+            status_frame, 
+            text="Your move", 
+            font=('Arial', 12, 'bold'), 
+            fg='#ecf0f1', 
+            bg='#2c3e50',
+            wraplength=230
+        )
+        self.status_label.pack()
 
     def setup_control_buttons(self):
-        for widget in self.control_frame.winfo_children():
-            widget.destroy()
+        """Setup control buttons"""
+        if hasattr(self, 'control_frame'):
+            self.control_frame.destroy()
 
-        btn_style = {'font': ('Arial', 8), 'bg': '#3498db', 'fg': 'white', 
-                    'relief': 'flat', 'padx': 10, 'pady': 3, 'width': 12}
+        self.control_frame = tk.Frame(self.control_panel, bg='#2c3e50')
+        self.control_frame.pack(pady=10)
 
-        if not self.review_mode:
-            tk.Button(self.control_frame, text="New Game", 
-                     command=self.new_game, **btn_style).pack(pady=3)
-            tk.Button(self.control_frame, text="Switch Side", 
-                     command=self.switch_side, **btn_style).pack(pady=3)
-            tk.Button(self.control_frame, text="Undo Move", 
-                     command=self.undo_move, **btn_style).pack(pady=3)
-            tk.Button(self.control_frame, text="Resign", 
-                     command=self.resign, **btn_style).pack(pady=3)
-        else:
-            tk.Button(self.control_frame, text="Previous", 
-                     command=self.prev_move, **btn_style).pack(pady=3)
-            tk.Button(self.control_frame, text="Next", 
-                     command=self.next_move, **btn_style).pack(pady=3)
-            tk.Button(self.control_frame, text="New Game", 
-                     command=self.new_game, **btn_style).pack(pady=3)
+        btn_style = {
+            'font': ('Arial', 9, 'bold'),
+            'bg': '#3498db',
+            'fg': 'white',
+            'relief': 'flat',
+            'padx': 15,
+            'pady': 5,
+            'width': 15,
+            'cursor': 'hand2'
+        }
+
+        buttons = [
+            ("New Game", self.new_game),
+            ("Switch Side", self.switch_side),
+            ("Undo Move", self.undo_move),
+            ("Resign", self.resign),
+            ("Test AI", self.test_ai),
+            ("Export Game", self.export_game)
+        ]
+
+        for text, command in buttons:
+            btn = tk.Button(self.control_frame, text=text, command=command, **btn_style)
+            btn.pack(pady=2)
+            
+            # Add hover effects
+            btn.bind("<Enter>", lambda e, b=btn: b.config(bg='#2980b9'))
+            btn.bind("<Leave>", lambda e, b=btn: b.config(bg='#3498db'))
+
+    def setup_analysis_panel(self):
+        """Setup the analysis text panel"""
+        analysis_frame = tk.Frame(self.control_panel, bg='#2c3e50')
+        analysis_frame.pack(fill='both', expand=True, pady=(15, 0))
+
+        tk.Label(
+            analysis_frame, 
+            text="Move History", 
+            font=('Arial', 11, 'bold'), 
+            fg='#ecf0f1', 
+            bg='#2c3e50'
+        ).pack()
+
+        # Scrollable text widget for move history
+        text_frame = tk.Frame(analysis_frame, bg='#34495e', relief='sunken', bd=1)
+        text_frame.pack(fill='both', expand=True, pady=5)
+
+        self.analysis_text = tk.Text(
+            text_frame,
+            font=('Arial', 9),
+            fg='#ecf0f1',
+            bg='#34495e',
+            wrap='word',
+            height=8,
+            relief='flat',
+            padx=5,
+            pady=5
+        )
+        
+        scrollbar = tk.Scrollbar(text_frame, orient='vertical', command=self.analysis_text.yview)
+        self.analysis_text.configure(yscrollcommand=scrollbar.set)
+        
+        self.analysis_text.pack(side='left', fill='both', expand=True)
+        scrollbar.pack(side='right', fill='y')
 
     def create_board(self):
+        """Create the chess board GUI"""
+        # Clear existing squares
         for r in range(8):
             for c in range(8):
                 if self.squares[r][c]:
@@ -132,538 +198,155 @@ class ChessVsAI:
                 
                 btn = tk.Button(
                     self.board_frame,
-                    font=('Arial', 14),
+                    font=('Arial', 16),
                     command=lambda x=r, y=c: self.on_click(x, y),
-                    relief='flat', 
-                    bd=1
+                    relief='flat',
+                    bd=1,
+                    cursor='hand2'
                 )
                 btn.grid(row=r, column=c, padx=1, pady=1, sticky='nsew')
                 self.squares[r][c] = btn
 
+        # Configure grid weights for responsive resizing
         for i in range(8):
             self.board_frame.grid_rowconfigure(i, weight=1, uniform='chess_rows')
             self.board_frame.grid_columnconfigure(i, weight=1, uniform='chess_cols')
 
     def on_window_resize(self, event):
-        board_height = self.board_container.winfo_height()
-        if board_height > 0:
-            new_size = max(8, min(20, int(board_height / 25)))
-            for r in range(8):
-                for c in range(8):
-                    self.squares[r][c].config(font=('Arial', new_size))
+        """Handle window resize events"""
+        if event.widget == self.root:
+            board_height = self.board_container.winfo_height()
+            if board_height > 50:  # Avoid division by zero
+                new_size = max(10, min(24, int(board_height / 30)))
+                for r in range(8):
+                    for c in range(8):
+                        if self.squares[r][c]:
+                            self.squares[r][c].config(font=('Arial', new_size))
 
-    def is_white_piece(self, piece):
-        return piece.isupper() and piece != '.'
-
-    def is_black_piece(self, piece):
-        return piece.islower() and piece != '.'
-
-    def get_piece_color(self, piece):
-        if piece == '.':
-            return None
-        return 'white' if piece.isupper() else 'black'
-
-    def is_valid_position(self, row, col):
-        return 0 <= row < 8 and 0 <= col < 8
-
-    def get_piece_moves(self, row, col, include_king_safety=True):
-        piece = self.board[row][col]
-        if piece == '.':
-            return []
-
-        piece_type = piece.lower()
-        moves = []
-
-        if piece_type == 'p':
-            moves = self.get_pawn_moves(row, col)
-        elif piece_type == 'r':
-            moves = self.get_rook_moves(row, col)
-        elif piece_type == 'n':
-            moves = self.get_knight_moves(row, col)
-        elif piece_type == 'b':
-            moves = self.get_bishop_moves(row, col)
-        elif piece_type == 'q':
-            moves = self.get_queen_moves(row, col)
-        elif piece_type == 'k':
-            moves = self.get_king_moves(row, col, include_king_safety)
-
-        if include_king_safety and piece_type != 'k':
-            legal_moves = []
-            for move in moves:
-                if self.is_legal_move(row, col, move[0], move[1]):
-                    legal_moves.append(move)
-            return legal_moves
-
-        return moves
-
-    def get_pawn_moves(self, row, col):
-        moves = []
-        piece = self.board[row][col]
-        is_white = self.is_white_piece(piece)
-        direction = -1 if is_white else 1
-        start_row = 6 if is_white else 1
-
-        new_row = row + direction
-        if self.is_valid_position(new_row, col) and self.board[new_row][col] == '.':
-            moves.append((new_row, col))
-            if row == start_row and self.is_valid_position(new_row + direction, col) and self.board[new_row + direction][col] == '.':
-                moves.append((new_row + direction, col))
-
-        for dc in [-1, 1]:
-            new_col = col + dc
-            if self.is_valid_position(new_row, new_col):
-                target = self.board[new_row][new_col]
-                if target != '.' and self.get_piece_color(target) != self.get_piece_color(piece):
-                    moves.append((new_row, new_col))
-                elif (new_row, new_col) == self.en_passant_target:
-                    moves.append((new_row, new_col))
-
-        return moves
-
-    def get_rook_moves(self, row, col):
-        moves = []
-        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        
-        for dr, dc in directions:
-            for i in range(1, 8):
-                new_row, new_col = row + dr * i, col + dc * i
-                if not self.is_valid_position(new_row, new_col):
-                    break
-                target = self.board[new_row][new_col]
-                if target == '.':
-                    moves.append((new_row, new_col))
-                else:
-                    if self.get_piece_color(target) != self.get_piece_color(self.board[row][col]):
-                        moves.append((new_row, new_col))
-                    break
-        
-        return moves
-
-    def get_knight_moves(self, row, col):
-        moves = []
-        knight_moves = [(-2, -1), (-2, 1), (-1, -2), (-1, 2), 
-                       (1, -2), (1, 2), (2, -1), (2, 1)]
-        
-        for dr, dc in knight_moves:
-            new_row, new_col = row + dr, col + dc
-            if self.is_valid_position(new_row, new_col):
-                target = self.board[new_row][new_col]
-                if target == '.' or self.get_piece_color(target) != self.get_piece_color(self.board[row][col]):
-                    moves.append((new_row, new_col))
-        
-        return moves
-
-    def get_bishop_moves(self, row, col):
-        moves = []
-        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-        
-        for dr, dc in directions:
-            for i in range(1, 8):
-                new_row, new_col = row + dr * i, col + dc * i
-                if not self.is_valid_position(new_row, new_col):
-                    break
-                target = self.board[new_row][new_col]
-                if target == '.':
-                    moves.append((new_row, new_col))
-                else:
-                    if self.get_piece_color(target) != self.get_piece_color(self.board[row][col]):
-                        moves.append((new_row, new_col))
-                    break
-        
-        return moves
-
-    def get_queen_moves(self, row, col):
-        return self.get_rook_moves(row, col) + self.get_bishop_moves(row, col)
-
-    def get_king_moves(self, row, col, include_king_safety=True):
-        moves = []
-        king_moves = [(-1, -1), (-1, 0), (-1, 1), (0, -1), 
-                     (0, 1), (1, -1), (1, 0), (1, 1)]
-        
-        piece = self.board[row][col]
-        piece_color = self.get_piece_color(piece)
-        enemy_color = 'black' if piece_color == 'white' else 'white'
-        
-        for dr, dc in king_moves:
-            new_row, new_col = row + dr, col + dc
-            if self.is_valid_position(new_row, new_col):
-                target = self.board[new_row][new_col]
-                if target == '.' or self.get_piece_color(target) != piece_color:
-                    if not include_king_safety or not self.is_square_attacked(new_row, new_col, enemy_color):
-                        moves.append((new_row, new_col))
-        
-        if include_king_safety and not self.is_in_check(piece_color):
-            is_white = self.is_white_piece(piece)
-            if is_white and not self.white_king_moved:
-                if (not self.white_rook_moved['right'] and 
-                    self.board[7][5] == '.' and self.board[7][6] == '.' and
-                    not self.is_square_attacked(7, 5, 'black') and 
-                    not self.is_square_attacked(7, 6, 'black')):
-                    moves.append((7, 6))
-                if (not self.white_rook_moved['left'] and 
-                    self.board[7][1] == '.' and self.board[7][2] == '.' and self.board[7][3] == '.' and
-                    not self.is_square_attacked(7, 2, 'black') and 
-                    not self.is_square_attacked(7, 3, 'black')):
-                    moves.append((7, 2))
-            elif not is_white and not self.black_king_moved:
-                if (not self.black_rook_moved['right'] and 
-                    self.board[0][5] == '.' and self.board[0][6] == '.' and
-                    not self.is_square_attacked(0, 5, 'white') and 
-                    not self.is_square_attacked(0, 6, 'white')):
-                    moves.append((0, 6))
-                if (not self.black_rook_moved['left'] and 
-                    self.board[0][1] == '.' and self.board[0][2] == '.' and self.board[0][3] == '.' and
-                    not self.is_square_attacked(0, 2, 'white') and 
-                    not self.is_square_attacked(0, 3, 'white')):
-                    moves.append((0, 2))
-        
-        return moves
-
-    def is_square_attacked(self, row, col, by_color):
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.' and self.get_piece_color(piece) == by_color:
-                    if self.can_piece_attack_square(r, c, row, col):
-                        return True
-        return False
-
-    def can_piece_attack_square(self, piece_row, piece_col, target_row, target_col):
-        piece = self.board[piece_row][piece_col]
-        piece_type = piece.lower()
-        
-        row_diff = target_row - piece_row
-        col_diff = target_col - piece_col
-        
-        if piece_type == 'p':
-            is_white = self.is_white_piece(piece)
-            direction = -1 if is_white else 1
-            return row_diff == direction and abs(col_diff) == 1
-            
-        elif piece_type == 'r':
-            if row_diff == 0 or col_diff == 0:
-                return self.is_path_clear(piece_row, piece_col, target_row, target_col)
-            
-        elif piece_type == 'n':
-            return (abs(row_diff) == 2 and abs(col_diff) == 1) or (abs(row_diff) == 1 and abs(col_diff) == 2)
-            
-        elif piece_type == 'b':
-            if abs(row_diff) == abs(col_diff):
-                return self.is_path_clear(piece_row, piece_col, target_row, target_col)
-            
-        elif piece_type == 'q':
-            if row_diff == 0 or col_diff == 0 or abs(row_diff) == abs(col_diff):
-                return self.is_path_clear(piece_row, piece_col, target_row, target_col)
-            
-        elif piece_type == 'k':
-            return abs(row_diff) <= 1 and abs(col_diff) <= 1 and (row_diff != 0 or col_diff != 0)
-        
-        return False
-
-    def is_path_clear(self, from_row, from_col, to_row, to_col):
-        row_diff = to_row - from_row
-        col_diff = to_col - from_col
-        
-        row_step = 0 if row_diff == 0 else (1 if row_diff > 0 else -1)
-        col_step = 0 if col_diff == 0 else (1 if col_diff > 0 else -1)
-        
-        current_row = from_row + row_step
-        current_col = from_col + col_step
-        
-        while (current_row, current_col) != (to_row, to_col):
-            if self.board[current_row][current_col] != '.':
-                return False
-            current_row += row_step
-            current_col += col_step
-        
-        return True
-
-    def is_in_check(self, color):
-        king_pos = self.find_king(color)
-        if not king_pos:
-            return False
-        enemy_color = 'black' if color == 'white' else 'white'
-        return self.is_square_attacked(king_pos[0], king_pos[1], enemy_color)
-
-    def find_king(self, color):
-        king = 'K' if color == 'white' else 'k'
-        for r in range(8):
-            for c in range(8):
-                if self.board[r][c] == king:
-                    return (r, c)
-        return None
-
-    def is_legal_move(self, from_row, from_col, to_row, to_col):
-        if not self.is_valid_position(from_row, from_col) or not self.is_valid_position(to_row, to_col):
-            return False
-        piece = self.board[from_row][from_col]
-        if piece == '.' or self.get_piece_color(piece) != self.current_turn:
-            return False
-        original_piece = self.board[to_row][to_col]
-        moving_piece = self.board[from_row][from_col]
-        
-        self.board[to_row][to_col] = moving_piece
-        self.board[from_row][from_col] = '.'
-        
-        in_check = self.is_in_check(self.current_turn)
-        
-        self.board[from_row][from_col] = moving_piece
-        self.board[to_row][to_col] = original_piece
-        
-        return not in_check
-
-    def is_checkmate(self, color):
-        if not self.is_in_check(color):
-            return False
-        
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.' and self.get_piece_color(piece) == color:
-                    moves = self.get_piece_moves(r, c)
-                    if moves:
-                        return False
-        
-        return True
-
-    def is_stalemate(self, color):
-        if self.is_in_check(color):
-            return False
-        
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.' and self.get_piece_color(piece) == color:
-                    moves = self.get_piece_moves(r, c)
-                    if moves:
-                        return False
-        
-        return True
-
-    def is_insufficient_material(self):
-        pieces = {'white': [], 'black': []}
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.':
-                    color = self.get_piece_color(piece)
-                    pieces[color].append(piece.lower())
-        
-        white_count = len(pieces['white'])
-        black_count = len(pieces['black'])
-        
-        if white_count <= 2 and black_count <= 2:
-            if white_count == 1 and black_count == 1:  # King vs King
-                return True
-            for color in ['white', 'black']:
-                other = 'black' if color == 'white' else 'white'
-                if len(pieces[color]) == 2:
-                    piece = [p for p in pieces[color] if p != 'k'][0]
-                    if piece in ['b', 'n']:  # King + Bishop/Knight vs King
-                        return len(pieces[other]) == 1
-                    elif piece in ['b', 'n'] and len(pieces[other]) == 2:  # King + Bishop/Knight vs King + Bishop/Knight
-                        other_piece = [p for p in pieces[other] if p != 'k'][0]
-                        if other_piece in ['b', 'n']:
-                            if piece == 'b' and other_piece == 'b':
-                                white_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == color][0]
-                                black_bishop_pos = [(r,c) for r in range(8) for c in range(8) if self.board[r][c].lower() == 'b' and self.get_piece_color(self.board[r][c]) == other][0]
-                                return (white_bishop_pos[0] + white_bishop_pos[1]) % 2 == (black_bishop_pos[0] + black_bishop_pos[1]) % 2
-                            return True
-        return False
-
-    def is_threefold_repetition(self):
-        position_key = self.get_position_key()
-        return self.position_history.get(position_key, 0) >= 3
-
-    def get_position_key(self):
-        board_str = ''.join(''.join(row) for row in self.board)
-        castling = f"{self.white_king_moved}{self.black_king_moved}{self.white_rook_moved['left']}{self.white_rook_moved['right']}{self.black_rook_moved['left']}{self.black_rook_moved['right']}"
-        ep = str(self.en_passant_target)
-        return f"{board_str}|{castling}|{ep}|{self.current_turn}"
-
-    def update_position_history(self):
-        position_key = self.get_position_key()
-        self.position_history[position_key] = self.position_history.get(position_key, 0) + 1
+    def on_closing(self):
+        """Clean up resources when closing"""
+        self.root.destroy()
 
     def get_promotion_piece(self, is_white):
+        """Get promotion piece from user"""
         dialog = tk.Toplevel(self.root)
         dialog.title("Pawn Promotion")
+        dialog.geometry("200x180")
         dialog.transient(self.root)
         dialog.grab_set()
+        dialog.configure(bg='#2c3e50')
+        
+        # Center the dialog
+        dialog.geometry("+%d+%d" % (
+            self.root.winfo_rootx() + 50,
+            self.root.winfo_rooty() + 50
+        ))
         
         pieces = ['Queen', 'Rook', 'Knight', 'Bishop']
         piece_var = tk.StringVar(value='Queen')
         
-        tk.Label(dialog, text="Choose promotion piece:", font=('Arial', 10)).pack(pady=5)
+        tk.Label(
+            dialog, 
+            text="Choose promotion piece:", 
+            font=('Arial', 12), 
+            fg='#ecf0f1', 
+            bg='#2c3e50'
+        ).pack(pady=10)
+        
         for piece in pieces:
-            tk.Radiobutton(dialog, text=piece, variable=piece_var, value=piece, font=('Arial', 8)).pack(anchor='w', padx=15)
-        tk.Button(dialog, text="Confirm", command=dialog.destroy, font=('Arial', 8)).pack(pady=5)
+            tk.Radiobutton(
+                dialog, 
+                text=piece, 
+                variable=piece_var, 
+                value=piece, 
+                font=('Arial', 10),
+                fg='#ecf0f1',
+                bg='#2c3e50',
+                selectcolor='#34495e'
+            ).pack(anchor='w', padx=20)
+        
+        tk.Button(
+            dialog, 
+            text="Confirm", 
+            command=dialog.destroy, 
+            font=('Arial', 10),
+            bg='#3498db',
+            fg='white',
+            relief='flat',
+            padx=20
+        ).pack(pady=10)
         
         self.root.wait_window(dialog)
         
-        piece_map = {'Queen': 'Q', 'Rook': 'R', 'Knight': 'N', 'Bishop': 'B'}
-        selected = piece_map[piece_var.get()]
-        return selected if is_white else selected.lower()
+        piece_map = {'Queen': 'q', 'Rook': 'r', 'Knight': 'n', 'Bishop': 'b'}
+        return piece_map.get(piece_var.get(), 'q')
 
-    def make_move(self, from_row, from_col, to_row, to_col):
-        if self.game_over or not self.is_legal_move(from_row, from_col, to_row, to_col):
+    def make_move(self, move):
+        """Make a move on the board"""
+        if self.game_over or move not in self.chess_board.legal_moves:
             return False
         
-        piece = self.board[from_row][from_col]
-        captured_piece = self.board[to_row][to_col]
-        
-        move_data = {
-            'from': (from_row, from_col),
-            'to': (to_row, to_col),
-            'piece': piece,
-            'captured': captured_piece,
-            'en_passant_target': self.en_passant_target,
-            'castling_rights': {
-                'white_king_moved': self.white_king_moved,
-                'black_king_moved': self.black_king_moved,
-                'white_rook_moved': self.white_rook_moved.copy(),
-                'black_rook_moved': self.black_rook_moved.copy()
-            },
-            'fifty_move_counter': self.fifty_move_counter,
-            'position_history': self.position_history.copy()
-        }
-        
-        self.en_passant_target = None
-        
-        piece_type = piece.lower()
-        
-        if piece_type == 'p':
-            self.fifty_move_counter = 0
-            if abs(from_row - to_row) == 2:
-                self.en_passant_target = (from_row + (to_row - from_row) // 2, from_col)
-            elif from_col != to_col and captured_piece == '.' and (to_row, to_col) == self.en_passant_target:
-                captured_row = from_row
-                self.board[captured_row][to_col] = '.'
-                move_data['en_passant_captured'] = 'P' if self.current_turn == 'black' else 'p'
-            elif (to_row == 0 and self.is_white_piece(piece)) or (to_row == 7 and self.is_black_piece(piece)):
-                if self.current_turn == self.player_side:
-                    piece = self.get_promotion_piece(self.is_white_piece(piece))
-                else:
-                    piece = 'Q' if self.is_white_piece(piece) else 'q'
-                move_data['promotion'] = piece
-        
-        elif piece_type == 'k':
-            if self.is_white_piece(piece):
-                self.white_king_moved = True
-                if from_col == 4 and to_col == 6:
-                    self.board[7][5] = self.board[7][7]
-                    self.board[7][7] = '.'
-                    move_data['castling'] = 'kingside'
-                elif from_col == 4 and to_col == 2:
-                    self.board[7][3] = self.board[7][0]
-                    self.board[7][0] = '.'
-                    move_data['castling'] = 'queenside'
-            else:
-                self.black_king_moved = True
-                if from_col == 4 and to_col == 6:
-                    self.board[0][5] = self.board[0][7]
-                    self.board[0][7] = '.'
-                    move_data['castling'] = 'kingside'
-                elif from_col == 4 and to_col == 2:
-                    self.board[0][3] = self.board[0][0]
-                    self.board[0][0] = '.'
-                    move_data['castling'] = 'queenside'
-        
-        elif piece_type == 'r':
-            if self.is_white_piece(piece):
-                if from_row == 7 and from_col == 0:
-                    self.white_rook_moved['left'] = True
-                elif from_row == 7 and from_col == 7:
-                    self.white_rook_moved['right'] = True
-            else:
-                if from_row == 0 and from_col == 0:
-                    self.black_rook_moved['left'] = True
-                elif from_row == 0 and from_col == 7:
-                    self.black_rook_moved['right'] = True
-        
-        if captured_piece != '.' or piece_type == 'p':
-            self.fifty_move_counter = 0
-        else:
-            self.fifty_move_counter += 1
-        
-        self.board[to_row][to_col] = piece
-        self.board[from_row][from_col] = '.'
-        
+        # Store move data
+        move_data = {'move': move, 'board': copy.deepcopy(self.chess_board)}
+        self.chess_board.push(move)
         self.move_history.append(move_data)
-        self.board_history.append(copy.deepcopy(self.board))
-        self.update_position_history()
+        self.board_history.append(copy.deepcopy(self.chess_board))
         
+        # Update game state
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
-        self.last_move = (from_row, from_col, to_row, to_col)
-        
+        self.last_move = (move.from_square, move.to_square)
         return True
 
     def undo_move(self):
-        if not self.move_history or self.review_mode:
+        """Undo the last move"""
+        if not self.move_history or self.ai_thinking:
             return False
         
-        move_data = self.move_history.pop()
-        self.board_history.pop()
-        from_row, from_col = move_data['from']
-        to_row, to_col = move_data['to']
+        # Undo player's move and AI's move if applicable
+        moves_to_undo = 2 if len(self.move_history) >= 2 else 1
         
-        self.board[from_row][from_col] = move_data['piece']
-        self.board[to_row][to_col] = move_data['captured']
+        for _ in range(moves_to_undo):
+            if self.move_history:
+                self.move_history.pop()
+                self.board_history.pop()
+                self.chess_board.pop()
         
-        if 'en_passant_captured' in move_data:
-            if self.is_white_piece(move_data['piece']):
-                self.board[to_row + 1][to_col] = 'p'
-            else:
-                self.board[to_row - 1][to_col] = 'P'
-        
-        if 'castling' in move_data:
-            if move_data['castling'] == 'kingside':
-                if self.is_white_piece(move_data['piece']):
-                    self.board[7][7] = self.board[7][5]
-                    self.board[7][5] = '.'
-                else:
-                    self.board[0][7] = self.board[0][5]
-                    self.board[0][5] = '.'
-            elif move_data['castling'] == 'queenside':
-                if self.is_white_piece(move_data['piece']):
-                    self.board[7][0] = self.board[7][3]
-                    self.board[7][3] = '.'
-                else:
-                    self.board[0][0] = self.board[0][3]
-                    self.board[0][3] = '.'
-        
-        if 'promotion' in move_data:
-            if self.is_white_piece(move_data['piece']):
-                self.board[from_row][from_col] = 'P'
-            else:
-                self.board[from_row][from_col] = 'p'
-        
-        self.en_passant_target = move_data['en_passant_target']
-        self.position_history = move_data['position_history']
-        self.white_king_moved = move_data['castling_rights']['white_king_moved']
-        self.black_king_moved = move_data['castling_rights']['black_king_moved']
-        self.white_rook_moved = move_data['castling_rights']['white_rook_moved']
-        self.black_rook_moved = move_data['castling_rights']['black_rook_moved']
-        self.fifty_move_counter = move_data['fifty_move_counter']
-        
-        self.current_turn = 'white' if self.current_turn == 'black' else 'black'
+        self.current_turn = 'white' if len(self.move_history) % 2 == 0 else 'black'
         self.game_over = False
+        self.last_move = None
         
         self.update_board()
         self.update_status()
         return True
 
     def resign(self):
-        if not self.game_over:
+        """Resign the game"""
+        if not self.game_over and not self.ai_thinking:
             winner = 'Black' if self.player_side == 'white' else 'White'
             self.status_label.config(text=f"You resigned! {winner} wins!")
             self.game_over = True
-            self.enter_review_mode()
 
-    def on_click(self, gui_row, gui_col):
-        if self.game_over or self.review_mode:
+    def export_game(self):
+        """Export game for review"""
+        if not self.move_history:
+            messagebox.showinfo("No Game", "No moves to export!")
             return
         
+        try:
+            from chess_review import save_game_for_review
+            filename = save_game_for_review(self.move_history, self.board_history)
+            messagebox.showinfo("Game Exported", f"Game saved as: {filename}")
+        except ImportError:
+            messagebox.showerror("Error", "Chess review module not found!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to export game: {e}")
+
+    def on_click(self, gui_row, gui_col):
+        """Handle square clicks"""
+        if self.game_over or self.ai_thinking:
+            return
+        
+        # Convert GUI coordinates to board coordinates
         if self.player_side == 'black':
             board_row = 7 - gui_row
             board_col = gui_col
@@ -671,416 +354,390 @@ class ChessVsAI:
             board_row = gui_row
             board_col = gui_col
         
+        square = chess.square(board_col, 7 - board_row)
+        
+        # Check if it's player's turn
         if (self.current_turn == 'white') != (self.player_side == 'white'):
             return
         
         if self.selected_square is None:
-            piece = self.board[board_row][board_col]
-            if piece != '.' and self.get_piece_color(piece) == self.current_turn:
-                self.selected_square = (board_row, board_col)
-                self.update_board()
-            else:
-                self.selected_square = None
+            # Select a piece
+            piece = self.chess_board.piece_at(square)
+            if piece and piece.color == (self.current_turn == 'white'):
+                self.selected_square = square
                 self.update_board()
         else:
-            from_row, from_col = self.selected_square
-            if (board_row, board_col) == self.selected_square:
+            # Handle move or selection change
+            if square == self.selected_square:
+                # Deselect
                 self.selected_square = None
                 self.update_board()
-            elif self.board[board_row][board_col] != '.' and self.get_piece_color(self.board[board_row][board_col]) == self.current_turn:
-                self.selected_square = (board_row, board_col)
+            elif (self.chess_board.piece_at(square) and 
+                  self.chess_board.piece_at(square).color == (self.current_turn == 'white')):
+                # Select different piece
+                self.selected_square = square
                 self.update_board()
             else:
-                legal_moves = self.get_piece_moves(from_row, from_col)
-                if (board_row, board_col) in legal_moves:
-                    if self.make_move(from_row, from_col, board_row, board_col):
-                        self.selected_square = None
-                        self.update_board()
-                        self.update_status()
-                        self.check_game_end()
-                        if not self.game_over and self.current_turn != self.player_side:
-                            self.root.after(500, self.ai_move)
-                    else:
-                        messagebox.showinfo("Invalid Move", "That move is not legal!")
+                # Attempt to make a move
+                self.attempt_move(square)
+
+    def attempt_move(self, target_square):
+        """Attempt to make a move to the target square"""
+        move = chess.Move(self.selected_square, target_square)
+        
+        # Handle pawn promotion
+        if (self.chess_board.piece_at(self.selected_square).piece_type == chess.PAWN and
+            chess.square_rank(target_square) in [0, 7]):
+            promotion = self.get_promotion_piece(self.current_turn == 'white')
+            move = chess.Move(
+                self.selected_square, 
+                target_square, 
+                promotion=chess.Piece.from_symbol(promotion).piece_type
+            )
+        
+        if move in self.chess_board.legal_moves:
+            if self.make_move(move):
                 self.selected_square = None
                 self.update_board()
+                self.update_status()
+                self.check_game_end()
+                
+                # Schedule AI move
+                if not self.game_over and self.current_turn != self.player_side:
+                    self.root.after(500, self.ai_move)
+        else:
+            messagebox.showinfo("Invalid Move", "That move is not legal!")
+        
+        self.selected_square = None
+        self.update_board()
 
     def check_game_end(self):
-        current_color = self.current_turn
-        if self.is_checkmate(current_color):
-            winner = 'Black' if current_color == 'white' else 'White'
+        """Check if the game has ended"""
+        if self.chess_board.is_checkmate():
+            winner = 'Black' if self.current_turn == 'white' else 'White'
             self.status_label.config(text=f"Checkmate! {winner} wins!")
             self.game_over = True
-            self.enter_review_mode()
-        elif self.is_stalemate(current_color):
-            self.status_label.config(text="Stalemate! Draw!")
+        elif self.chess_board.is_stalemate():
+            self.status_label.config(text="Draw by stalemate!")
             self.game_over = True
-            self.enter_review_mode()
-        elif self.fifty_move_counter >= 100:
-            self.status_label.config(text="Draw by 50-move rule!")
-            self.game_over = True
-            self.enter_review_mode()
-        elif self.is_insufficient_material():
+        elif self.chess_board.is_insufficient_material():
             self.status_label.config(text="Draw by insufficient material!")
             self.game_over = True
-            self.enter_review_mode()
-        elif self.is_threefold_repetition():
-            self.status_label.config(text="Draw by threefold repetition!")
+        elif self.chess_board.is_fifty_moves():
+            self.status_label.config(text="Draw by fifty-move rule!")
             self.game_over = True
-            self.enter_review_mode()
-
-    def enter_review_mode(self):
-        self.review_mode = True
-        self.current_review_move = len(self.move_history)
-        self.setup_control_buttons()
-        self.update_board()
-        self.update_status()
-
-    def prev_move(self):
-        if self.current_review_move > 0:
-            self.current_review_move -= 1
-            self.update_board()
-            self.update_status()
-
-    def next_move(self):
-        if self.current_review_move < len(self.move_history):
-            self.current_review_move += 1
-            self.update_board()
-            self.update_status()
+        elif self.chess_board.is_repetition():
+            self.status_label.config(text="Draw by repetition!")
+            self.game_over = True
 
     def update_board(self):
-        for gui_r in range(8):
-            for gui_c in range(8):
-                if self.player_side == 'black':
-                    board_r = 7 - gui_r
-                    board_c = gui_c
-                else:
-                    board_r = gui_r
-                    board_c = gui_c
+        """Update the visual representation of the board"""
+        if not hasattr(self, 'squares') or not self.squares:
+            return
+        
+        for r in range(8):
+            for c in range(8):
+                square = chess.square(c, 7-r)
+                
+                # Convert to GUI coordinates
+                gui_r = 7 - chess.square_rank(square) if self.player_side == 'white' else chess.square_rank(square)
+                gui_c = chess.square_file(square)
                 
                 btn = self.squares[gui_r][gui_c]
-                if self.review_mode:
-                    board_state = self.board_history[self.current_review_move]
-                    piece = board_state[board_r][board_c]
-                else:
-                    piece = self.board[board_r][board_c]
+                if not btn:
+                    continue
+                
+                # Get piece for current position
+                piece = self.chess_board.piece_at(square)
+                
+                # Determine background color
                 bg_color = '#f0d9b5' if (gui_r + gui_c) % 2 == 0 else '#b58863'
                 
-                if not self.review_mode:
-                    if self.selected_square:
-                        selected_r, selected_c = self.selected_square
-                        if (board_r, board_c) == (selected_r, selected_c):
-                            bg_color = '#FFFF00'
-                        
-                        legal_moves = self.get_piece_moves(selected_r, selected_c)
-                        if (board_r, board_c) in legal_moves:
-                            bg_color = '#90EE90'
-                    
-                    if self.last_move:
-                        from_r, from_c, to_r, to_c = self.last_move
-                        if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
-                            bg_color = '#FFD700'
-                    
-                    if self.is_in_check(self.current_turn):
-                        king_pos = self.find_king(self.current_turn)
-                        if king_pos and (board_r, board_c) == king_pos:
-                            bg_color = '#FF6B6B'
-                else:
-                    if self.current_review_move > 0:
-                        move = self.move_history[self.current_review_move - 1]
-                        from_r, from_c = move['from']
-                        to_r, to_c = move['to']
-                        if (board_r, board_c) in [(from_r, from_c), (to_r, to_c)]:
-                            bg_color = '#FFD700'
+                # Highlight selected square and legal moves
+                if self.selected_square and square == self.selected_square:
+                    bg_color = '#90EE90'
+                elif self.selected_square:
+                    legal_moves = [m.to_square for m in self.chess_board.legal_moves 
+                                 if m.from_square == self.selected_square]
+                    if square in legal_moves:
+                        bg_color = '#98FB98'
                 
-                btn.config(text=self.PIECES.get(piece, ''), bg=bg_color)
+                # Highlight last move
+                if self.last_move and square in [self.last_move[0], self.last_move[1]]:
+                    bg_color = '#FFD700'
+                
+                # Highlight king in check
+                if self.chess_board.is_check():
+                    king_square = self.chess_board.king(self.current_turn == 'white')
+                    if square == king_square:
+                        bg_color = '#FF6B6B'
+                
+                # Set piece symbol and color
+                piece_symbol = self.PIECES.get(piece.symbol() if piece else '', '')
+                btn.config(text=piece_symbol, bg=bg_color)
 
     def update_status(self):
-        if self.review_mode:
-            if self.current_review_move == len(self.move_history):
-                status = self.status_label.cget("text")  # Keep final game result
-            else:
-                move_num = (self.current_review_move + 1) // 2 + 1
-                color = 'White' if self.current_review_move % 2 == 0 else 'Black'
-                move = self.move_history[self.current_review_move - 1] if self.current_review_move > 0 else None
-                move_text = f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" if move else "Start"
-                status = f"Review: Move {move_num} ({color}) - {move_text}"
-            self.status_label.config(text=status)
-            
-            if self.move_history:
-                start_idx = max(0, self.current_review_move - 2)
-                end_idx = min(len(self.move_history), self.current_review_move + 3)
-                recent_moves = self.move_history[start_idx:end_idx]
-                history_text = "Move History:\n" + "\n".join([
-                    f"{(i+1)//2 + 1}. {self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
-                    for i, move in enumerate(recent_moves, start=start_idx)
-                ])
-                self.history_label.config(text=history_text)
-            else:
-                self.history_label.config(text="Move History: None")
+        """Update status and analysis text"""
+        if not hasattr(self, 'status_label'):
+            return
+        
+        if self.game_over:
+            return
+        
+        if self.ai_thinking:
+            status = "AI is thinking..."
         else:
-            if self.game_over:
-                return
             status = f"{self.current_turn.title()}'s turn"
-            if self.is_in_check(self.current_turn):
+            if self.chess_board.is_check():
                 status += " - CHECK!"
-            self.status_label.config(text=status)
-            
-            if self.move_history:
-                recent_moves = self.move_history[-5:]
-                history_text = "Move History:\n" + "\n".join([
-                    f"{self.square_to_notation(move['from'])}-{self.square_to_notation(move['to'])}" 
-                    for move in recent_moves
-                ])
-                self.history_label.config(text=history_text)
+        
+        self.status_label.config(text=status)
+        self.update_analysis_text()
 
-    def square_to_notation(self, pos):
-        row, col = pos
-        return chr(ord('a') + col) + str(8 - row)
+    def update_analysis_text(self):
+        """Update the analysis text widget with move history"""
+        self.analysis_text.delete(1.0, tk.END)
+        self.analysis_text.insert(tk.END, "Move History:\n\n")
+        
+        # Show last 15 moves
+        start_idx = max(0, len(self.move_history) - 15)
+        
+        for i in range(start_idx, len(self.move_history)):
+            move_data = self.move_history[i]
+            move = move_data['move']
+            
+            # Get the board state before this move for SAN notation
+            board_before = self.board_history[i]
+            
+            try:
+                san = board_before.san(move)
+                move_num = (i + 2) // 2  # Move numbering starts at 1
+                
+                if i % 2 == 0:  # White move
+                    self.analysis_text.insert(tk.END, f"{move_num}. {san}")
+                else:  # Black move
+                    if i == len(self.move_history) - 1:  # Last move
+                        self.analysis_text.insert(tk.END, f" {san}\n")
+                    else:
+                        self.analysis_text.insert(tk.END, f" {san}\n")
+                        
+            except Exception as e:
+                print(f"Error generating SAN for move {move.uci()}: {e}")
+                continue
 
     def ai_move(self):
-        if self.game_over or self.current_turn == self.player_side or self.review_mode:
+        """Handle AI move generation"""
+        if (self.game_over or 
+            self.current_turn == self.player_side or 
+            self.ai_thinking):
             return
-        start_time = time.time()
-        move = self.minimax(3, self.current_turn, -float('inf'), float('inf'))[1]
-        if time.time() - start_time > 2:
-            print("AI move took", time.time() - start_time, "seconds")
-        if move:
-            from_r, from_c, to_r, to_c = move
-            self.make_move(from_r, from_c, to_r, to_c)
-            self.update_board()
-            self.update_status()
-            self.check_game_end()
+        
+        self.ai_thinking = True
+        self.update_status()
+        
+        def get_ai_move():
+            """Get AI move in separate thread"""
+            start_time = time.time()
+            move = None
+            
+            try:
+                # Try Ollama first
+                move = self.get_ollama_move()
+                if move:
+                    print(f"Ollama move: {move.uci()}")
+                else:
+                    raise Exception("Ollama failed to provide valid move")
+                    
+            except Exception as e:
+                print(f"Ollama failed: {e}")
+                move = self.get_random_move()
+            
+            # Execute move on main thread
+            def execute_move():
+                self.ai_thinking = False
+                if move and self.make_move(move):
+                    self.update_board()
+                    self.update_status()
+                    self.check_game_end()
+                
+                print(f"AI move took {time.time() - start_time:.2f} seconds")
+            
+            self.root.after(0, execute_move)
+        
+        # Start AI thinking in background thread
+        threading.Thread(target=get_ai_move, daemon=True).start()
 
-    def minimax(self, depth, color, alpha, beta):
-        position_key = zlib.crc32(self.get_position_key().encode())
-        if position_key in self.transposition_table:
-            tt_entry = self.transposition_table[position_key]
-            if tt_entry['depth'] >= depth:
-                return tt_entry['score'], tt_entry['best_move']
+    def get_ollama_move(self):
+        """Get move from Ollama"""
+        fen = self.chess_board.fen()
         
-        if depth == 0 or self.is_checkmate(color) or self.is_stalemate(color) or self.is_insufficient_material() or self.is_threefold_repetition():
-            score = self.evaluate_board()
-            return score, None
+        # Check transposition table first
+        if fen in self.transposition_table:
+            move_str = self.transposition_table[fen]
+            try:
+                move = chess.Move.from_uci(move_str)
+                if move in self.chess_board.legal_moves:
+                    return move
+            except:
+                pass
         
-        moves = self.get_all_moves(color)
-        moves = self.order_moves(moves)
+        # Prepare prompt for Ollama
+        opening_hints = ""
+        if len(self.move_history) < 10:
+            if self.current_turn == 'white':
+                opening_hints = " Consider opening moves like e4, d4, Nf3, c4."
+            else:
+                opening_hints = " Consider responses like e5, e6, c5, d5, Nf6."
         
-        best_move = None
-        if color == self.current_turn:
-            max_eval = -float('inf')
-            for move in moves:
-                from_r, from_c, to_r, to_c = move
-                original_piece = self.board[to_r][to_c]
-                moving_piece = self.board[from_r][from_c]
-                
-                self.board[to_r][to_c] = moving_piece
-                self.board[from_r][from_c] = '.'
-                self.current_turn = 'black' if color == 'white' else 'white'
-                
-                eval_score, _ = self.minimax(depth - 1, self.current_turn, alpha, beta)
-                
-                self.current_turn = color
-                self.board[from_r][from_c] = moving_piece
-                self.board[to_r][to_c] = original_piece
-                
-                if eval_score > max_eval:
-                    max_eval = eval_score
-                    best_move = move
-                alpha = max(alpha, eval_score)
-                if beta <= alpha:
-                    break
+        prompt = (f"Chess position FEN: {fen}\n"
+                 f"Generate the best move in UCI format (e.g., e2e4, g1f3).{opening_hints}\n"
+                 f"Respond with ONLY the UCI move, nothing else.")
+        
+        try:
+            response = ollama.generate(
+                model=self.ollama_model,
+                prompt=prompt,
+                options={
+                    'temperature': 0.7,
+                    'top_p': 0.9,
+                    'num_predict': 10
+                }
+            )
             
-            self.transposition_table[position_key] = {
-                'score': max_eval,
-                'best_move': best_move,
-                'depth': depth
-            }
-            return max_eval, best_move
-        else:
-            min_eval = float('inf')
-            for move in moves:
-                from_r, from_c, to_r, to_c = move
-                original_piece = self.board[to_r][to_c]
-                moving_piece = self.board[from_r][from_c]
-                
-                self.board[to_r][to_c] = moving_piece
-                self.board[from_r][from_c] = '.'
-                self.current_turn = 'black' if color == 'white' else 'white'
-                
-                eval_score, _ = self.minimax(depth - 1, self.current_turn, alpha, beta)
-                
-                self.current_turn = color
-                self.board[from_r][from_c] = moving_piece
-                self.board[to_r][to_c] = original_piece
-                
-                if eval_score < min_eval:
-                    min_eval = eval_score
-                    best_move = move
-                beta = min(beta, eval_score)
-                if beta <= alpha:
-                    break
+            move_str = response["response"].strip().lower()
             
-            self.transposition_table[position_key] = {
-                'score': min_eval,
-                'best_move': best_move,
-                'depth': depth
-            }
-            return min_eval, best_move
+            # Clean up the response - extract only UCI move
+            import re
+            uci_pattern = r'[a-h][1-8][a-h][1-8][qrbn]?'
+            match = re.search(uci_pattern, move_str)
+            
+            if match:
+                move_str = match.group()
+                move = chess.Move.from_uci(move_str)
+                
+                if move in self.chess_board.legal_moves:
+                    self.transposition_table[fen] = move_str
+                    return move
+            
+            raise ValueError(f"Invalid move from Ollama: {move_str}")
+            
+        except Exception as e:
+            print(f"Ollama error: {e}")
+            return None
 
-    def order_moves(self, moves):
-        piece_values = {'p': 1, 'n': 3, 'b': 3, 'r': 5, 'q': 9, 'k': 200}
-        ordered_moves = []
-        
-        for move in moves:
-            from_r, from_c, to_r, to_c = move
-            score = 0
-            
-            if self.board[to_r][to_c] != '.':
-                captured_value = piece_values.get(self.board[to_r][to_c].lower(), 0)
-                moving_value = piece_values.get(self.board[from_r][from_c].lower(), 0)
-                score += 10 * captured_value - moving_value
-            
-            original_piece = self.board[to_r][to_c]
-            moving_piece = self.board[from_r][from_c]
-            self.board[to_r][to_c] = moving_piece
-            self.board[from_r][from_c] = '.'
-            opponent_color = 'black' if self.current_turn == 'white' else 'white'
-            if self.is_in_check(opponent_color):
-                score += 50
-            self.board[from_r][from_c] = moving_piece
-            self.board[to_r][to_c] = original_piece
-            
-            if self.board[from_r][from_c].lower() == 'p' and (to_r == 0 or to_r == 7):
-                score += 100
-            
-            ordered_moves.append((move, score))
-        
-        ordered_moves.sort(key=lambda x: x[1], reverse=True)
-        return [move[0] for move in ordered_moves]
+    def get_random_move(self):
+        """Get random legal move as last resort"""
+        legal_moves = list(self.chess_board.legal_moves)
+        if legal_moves:
+            return random.choice(legal_moves)
+        return None
 
-    def evaluate_board(self):
-        piece_values = {'p': 100, 'n': 320, 'b': 330, 'r': 500, 'q': 900, 'k': 20000}
-        
-        pawn_table = [
-            0,  0,  0,  0,  0,  0,  0,  0,
-            50, 50, 50, 50, 50, 50, 50, 50,
-            10, 10, 20, 30, 30, 20, 10, 10,
-            5,  5, 10, 25, 25, 10,  5,  5,
-            0,  0,  0, 20, 20,  0,  0,  0,
-            5, -5,-10,  0,  0,-10, -5,  5,
-            5, 10, 10,-20,-20, 10, 10,  5,
-            0,  0,  0,  0,  0,  0,  0,  0
-        ]
-        
-        knight_table = [
-            -50,-40,-30,-30,-30,-30,-40,-50,
-            -40,-20,  0,  0,  0,  0,-20,-40,
-            -30,  0, 10, 15, 15, 10,  0,-30,
-            -30,  5, 15, 20, 20, 15,  5,-30,
-            -30,  0, 15, 20, 20, 15,  0,-30,
-            -30,  5, 10, 15, 15, 10,  5,-30,
-            -40,-20,  0,  5,  5,  0,-20,-40,
-            -50,-40,-30,-30,-30,-30,-40,-50
-        ]
-        
-        bishop_table = [
-            -20,-10,-10,-10,-10,-10,-10,-20,
-            -10,  0,  0,  0,  0,  0,  0,-10,
-            -10,  0,  5, 10, 10,  5,  0,-10,
-            -10,  5,  5, 10, 10,  5,  5,-10,
-            -10,  0, 10, 10, 10, 10,  0,-10,
-            -10, 10, 10,  5,  5, 10, 10,-10,
-            -10,  5,  0,  0,  0,  0,  5,-10,
-            -20,-10,-10,-10,-10,-10,-10,-20
-        ]
-        
-        score = 0
-        
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.':
-                    value = piece_values.get(piece.lower(), 0)
-                    idx = r * 8 + c
-                    if piece.lower() == 'p':
-                        pos_bonus = pawn_table[idx] if self.is_white_piece(piece) else pawn_table[(7-r)*8+c]
-                    elif piece.lower() == 'n':
-                        pos_bonus = knight_table[idx] if self.is_white_piece(piece) else knight_table[(7-r)*8+c]
-                    elif piece.lower() == 'b':
-                        pos_bonus = bishop_table[idx] if self.is_white_piece(piece) else bishop_table[(7-r)*8+c]
+    def test_ai(self):
+        """Test AI by playing several games"""
+        if self.ai_thinking:
+            return
+            
+        def run_test():
+            results = []
+            for game_num in range(3):
+                print(f"Starting test game {game_num + 1}")
+                self.reset_game()
+                
+                moves_played = 0
+                max_moves = 100  # Prevent infinite games
+                
+                while not self.game_over and moves_played < max_moves:
+                    if self.current_turn == self.player_side:
+                        # Random move for "player"
+                        move = random.choice(list(self.chess_board.legal_moves))
+                        self.make_move(move)
                     else:
-                        pos_bonus = 0
+                        # AI move
+                        ai_move = None
+                        try:
+                            ai_move = self.get_ollama_move()
+                            if not ai_move:
+                                ai_move = self.get_random_move()
+                        except:
+                            ai_move = self.get_random_move()
                         
-                    if self.is_white_piece(piece):
-                        score += value + pos_bonus
-                    else:
-                        score -= value + pos_bonus
+                        if ai_move:
+                            self.make_move(ai_move)
+                    
+                    moves_played += 1
+                    self.check_game_end()
+                
+                result = self.chess_board.result()
+                results.append(result)
+                print(f"Test game {game_num + 1} result: {result}")
+            
+            # Update UI on main thread
+            def show_results():
+                wins = results.count('1-0' if self.player_side == 'white' else '0-1')
+                losses = results.count('0-1' if self.player_side == 'white' else '1-0')
+                draws = results.count('1/2-1/2')
+                
+                result_text = f"Test Results: {wins}W-{losses}L-{draws}D"
+                self.status_label.config(text=result_text)
+                print(f"Final test results: {result_text}")
+            
+            self.root.after(0, show_results)
         
-        white_moves = len(self.get_all_moves('white'))
-        black_moves = len(self.get_all_moves('black'))
-        score += (white_moves - black_moves) * 5
-        
-        white_king = self.find_king('white')
-        black_king = self.find_king('black')
-        if white_king:
-            r, c = white_king
-            if not any(self.board[i][c] == 'P' for i in range(r)):
-                score -= 20
-            if len(self.move_history) < 20 and c in [3, 4]:
-                score -= 15
-        if black_king:
-            r, c = black_king
-            if not any(self.board[i][c] == 'p' for i in range(r+1, 8)):
-                score += 20
-            if len(self.move_history) < 20 and c in [3, 4]:
-                score += 15
-        
-        for c in range(8):
-            white_pawns = sum(1 for r in range(8) if self.board[r][c] == 'P')
-            black_pawns = sum(1 for r in range(8) if self.board[r][c] == 'p')
-            if white_pawns > 1:
-                score -= 10 * (white_pawns - 1)
-            if black_pawns > 1:
-                score += 10 * (black_pawns - 1)
-        
-        if self.is_checkmate('white'):
-            score -= 1000000
-        elif self.is_checkmate('black'):
-            score += 1000000
-        elif self.is_in_check('white'):
-            score -= 50
-        elif self.is_in_check('black'):
-            score += 50
-        
-        return score
-
-    def get_all_moves(self, color):
-        moves = []
-        for r in range(8):
-            for c in range(8):
-                piece = self.board[r][c]
-                if piece != '.' and self.get_piece_color(piece) == color:
-                    piece_moves = self.get_piece_moves(r, c)
-                    for move in piece_moves:
-                        moves.append((r, c, move[0], move[1]))
-        return moves
+        # Run test in background
+        threading.Thread(target=run_test, daemon=True).start()
 
     def new_game(self):
+        """Start a new game"""
+        if self.ai_thinking:
+            return
+            
         self.reset_game()
         self.setup_control_buttons()
-        self.update_board()
-        self.update_status()
+        
+        # Start AI move if player is black
         if self.player_side == 'black':
-            self.root.after(500, self.ai_move)
+            self.root.after(1000, self.ai_move)
 
     def switch_side(self):
+        """Switch player side"""
+        if self.ai_thinking:
+            return
+            
         self.player_side = 'black' if self.player_side == 'white' else 'white'
         self.new_game()
 
     def run(self):
-        self.root.mainloop()
+        """Run the application"""
+        try:
+            self.root.mainloop()
+        except KeyboardInterrupt:
+            print("Application interrupted")
+        finally:
+            self.on_closing()
+
+
+def main():
+    """Main entry point"""
+    try:
+        # Check for required dependencies
+        required_modules = ['chess', 'ollama', 'dotenv']
+        for module in required_modules:
+            try:
+                __import__(module)
+            except ImportError:
+                print(f"Error: Required module '{module}' not found.")
+                print(f"Please install it using: pip install {module}")
+                return
+        
+        # Create and run the application
+        app = ChessVsAI()
+        app.run()
+        
+    except Exception as e:
+        print(f"Application startup error: {e}")
+        import traceback
+        traceback.print_exc()
+
 
 if __name__ == "__main__":
-    game = ChessVsAI()
-    game.run()
+    main()
