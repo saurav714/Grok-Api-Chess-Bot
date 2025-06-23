@@ -1,7 +1,9 @@
 ♟️ Chess vs AI with LLM
+
 A Python-based chess application featuring a powerful AI opponent driven by the Ollama language model, with a fallback to the Stockfish chess engine. Enjoy an interactive GUI, move suggestions, game review tools, and various play modes — all packed into one simple yet robust chess interface.
 
-🚀 Features
+🚀 Features: 
+
 ♟️ Game Interface
 Interactive Chess Board: Tkinter-based GUI with click-to-move support.
 
@@ -80,6 +82,9 @@ bash
 Copy
 Edit
 python chess_vs_ai.py
+
+
+
 🛠️ Configuration
 Edit or create a .env file in the root directory:
 
