@@ -1,6 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 import chess
+import chess.engine
 import copy
 import time
 import ollama
@@ -17,10 +18,17 @@ class ChessVsAI:
         }
         self.player_side = 'white'
         self.transposition_table = {}
+        self.review_mode = False
+        self.current_review_move = 0
         self.ai_thinking = False  # Prevent multiple AI moves
         
         # Load environment variables first
         load_dotenv()
+        
+        # Stockfish configuration
+        self.stockfish_path = os.getenv("STOCKFISH_PATH", r"C:\Users\HP\Desktop\Grok Api Chess Bot\stockfish.exe")
+        self.engine = None
+        self.init_stockfish()
         
         # Ollama configuration
         self.ollama_model = os.getenv("OLLAMA_MODEL", "phi3")
@@ -31,21 +39,43 @@ class ChessVsAI:
         self.setup_gui()
         self.reset_game()
 
+    def init_stockfish(self):
+        """Initialize Stockfish engine with error handling"""
+        if os.path.exists(self.stockfish_path):
+            try:
+                self.engine = chess.engine.SimpleEngine.popen_uci(self.stockfish_path)
+                self.engine.configure({
+                    "Threads": min(4, os.cpu_count() or 2),
+                    "Hash": 256,
+                    "UCI_LimitStrength": False
+                })
+                print("Stockfish loaded successfully.")
+            except Exception as e:
+                print(f"Failed to load Stockfish: {e}")
+                self.engine = None
+        else:
+            print(f"Stockfish not found at '{self.stockfish_path}'")
+
     def reset_game(self):
         """Reset the game state"""
         self.chess_board = chess.Board()
         self.move_history = []
         self.board_history = [copy.deepcopy(self.chess_board)]
+        self.evaluations = []
+        self.best_moves = []
         self.selected_square = None
         self.last_move = None
         self.current_turn = 'white'
         self.game_over = False
+        self.review_mode = False
+        self.current_review_move = 0
         self.ai_thinking = False
         self.transposition_table.clear()
         
         if hasattr(self, 'root'):
             self.update_board()
             self.update_status()
+            self.update_eval_bar()
 
     def setup_gui(self):
         """Initialize the GUI"""
@@ -86,7 +116,7 @@ class ChessVsAI:
         self.control_panel.pack(side='right', fill='y')
         self.control_panel.pack_propagate(False)
 
-        # Status panel
+        # Status and evaluation
         self.setup_status_panel()
         self.setup_control_buttons()
         self.setup_analysis_panel()
@@ -103,7 +133,7 @@ class ChessVsAI:
             self.root.after(1000, self.ai_move)
 
     def setup_status_panel(self):
-        """Setup the status panel"""
+        """Setup the status and evaluation panel"""
         status_frame = tk.Frame(self.control_panel, bg='#2c3e50')
         status_frame.pack(fill='x', pady=(0, 15))
 
@@ -117,8 +147,36 @@ class ChessVsAI:
         )
         self.status_label.pack()
 
+        # Evaluation bar
+        eval_frame = tk.Frame(status_frame, bg='#2c3e50')
+        eval_frame.pack(pady=(10, 0))
+
+        tk.Label(eval_frame, text="Evaluation", font=('Arial', 10), fg='#bdc3c7', bg='#2c3e50').pack()
+        
+        self.eval_canvas = tk.Canvas(
+            eval_frame, 
+            width=30, 
+            height=150, 
+            bg='#34495e', 
+            highlightthickness=1,
+            highlightbackground='#bdc3c7'
+        )
+        self.eval_canvas.pack(pady=5)
+        
+        # Create evaluation bar
+        self.eval_bar = self.eval_canvas.create_rectangle(5, 75, 25, 75, fill='#bdc3c7', outline='#7f8c8d')
+        
+        self.eval_label = tk.Label(
+            eval_frame, 
+            text="0.00", 
+            font=('Arial', 10, 'bold'), 
+            fg='#ecf0f1', 
+            bg='#2c3e50'
+        )
+        self.eval_label.pack()
+
     def setup_control_buttons(self):
-        """Setup control buttons"""
+        """Setup control buttons based on current mode"""
         if hasattr(self, 'control_frame'):
             self.control_frame.destroy()
 
@@ -136,14 +194,21 @@ class ChessVsAI:
             'cursor': 'hand2'
         }
 
-        buttons = [
-            ("New Game", self.new_game),
-            ("Switch Side", self.switch_side),
-            ("Undo Move", self.undo_move),
-            ("Resign", self.resign),
-            ("Test AI", self.test_ai),
-            ("Export Game", self.export_game)
-        ]
+        if not self.review_mode:
+            buttons = [
+                ("New Game", self.new_game),
+                ("Switch Side", self.switch_side),
+                ("Undo Move", self.undo_move),
+                ("Resign", self.resign),
+                ("Test AI", self.test_ai)
+            ]
+        else:
+            buttons = [
+                ("◀ Previous", self.prev_move),
+                ("Next ▶", self.next_move),
+                ("Exit Review", self.exit_review),
+                ("New Game", self.new_game)
+            ]
 
         for text, command in buttons:
             btn = tk.Button(self.control_frame, text=text, command=command, **btn_style)
@@ -160,13 +225,13 @@ class ChessVsAI:
 
         tk.Label(
             analysis_frame, 
-            text="Move History", 
+            text="Analysis", 
             font=('Arial', 11, 'bold'), 
             fg='#ecf0f1', 
             bg='#2c3e50'
         ).pack()
 
-        # Scrollable text widget for move history
+        # Scrollable text widget for analysis
         text_frame = tk.Frame(analysis_frame, bg='#34495e', relief='sunken', bd=1)
         text_frame.pack(fill='both', expand=True, pady=5)
 
@@ -225,6 +290,11 @@ class ChessVsAI:
 
     def on_closing(self):
         """Clean up resources when closing"""
+        if self.engine:
+            try:
+                self.engine.quit()
+            except:
+                pass
         self.root.destroy()
 
     def get_promotion_piece(self, is_white):
@@ -283,7 +353,7 @@ class ChessVsAI:
 
     def make_move(self, move):
         """Make a move on the board"""
-        if self.game_over or move not in self.chess_board.legal_moves:
+        if self.game_over or self.review_mode or move not in self.chess_board.legal_moves:
             return False
         
         # Store move data
@@ -292,14 +362,44 @@ class ChessVsAI:
         self.move_history.append(move_data)
         self.board_history.append(copy.deepcopy(self.chess_board))
         
+        # Get evaluation if engine is available
+        self.get_position_evaluation()
+        
         # Update game state
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
         self.last_move = (move.from_square, move.to_square)
         return True
 
+    def get_position_evaluation(self):
+        """Get position evaluation from engine"""
+        if self.engine:
+            try:
+                eval_info = self.engine.analyse(
+                    self.chess_board, 
+                    chess.engine.Limit(depth=15, time=2.0)
+                )
+                
+                if eval_info['score'].is_mate():
+                    eval_score = f"M{eval_info['score'].mate()}"
+                else:
+                    centipawns = eval_info['score'].relative.cp
+                    eval_score = centipawns / 100.0 if centipawns is not None else 0.0
+                
+                self.evaluations.append(eval_score)
+                pv = eval_info.get('pv', [])
+                self.best_moves.append(pv[0] if pv else None)
+                
+            except Exception as e:
+                print(f"Evaluation error: {e}")
+                self.evaluations.append(0.0)
+                self.best_moves.append(None)
+        else:
+            self.evaluations.append(0.0)
+            self.best_moves.append(None)
+
     def undo_move(self):
         """Undo the last move"""
-        if not self.move_history or self.ai_thinking:
+        if not self.move_history or self.review_mode or self.ai_thinking:
             return False
         
         # Undo player's move and AI's move if applicable
@@ -309,6 +409,10 @@ class ChessVsAI:
             if self.move_history:
                 self.move_history.pop()
                 self.board_history.pop()
+                if self.evaluations:
+                    self.evaluations.pop()
+                if self.best_moves:
+                    self.best_moves.pop()
                 self.chess_board.pop()
         
         self.current_turn = 'white' if len(self.move_history) % 2 == 0 else 'black'
@@ -317,6 +421,7 @@ class ChessVsAI:
         
         self.update_board()
         self.update_status()
+        self.update_eval_bar()
         return True
 
     def resign(self):
@@ -325,25 +430,11 @@ class ChessVsAI:
             winner = 'Black' if self.player_side == 'white' else 'White'
             self.status_label.config(text=f"You resigned! {winner} wins!")
             self.game_over = True
-
-    def export_game(self):
-        """Export game for review"""
-        if not self.move_history:
-            messagebox.showinfo("No Game", "No moves to export!")
-            return
-        
-        try:
-            from chess_review import save_game_for_review
-            filename = save_game_for_review(self.move_history, self.board_history)
-            messagebox.showinfo("Game Exported", f"Game saved as: {filename}")
-        except ImportError:
-            messagebox.showerror("Error", "Chess review module not found!")
-        except Exception as e:
-            messagebox.showerror("Error", f"Failed to export game: {e}")
+            self.enter_review_mode()
 
     def on_click(self, gui_row, gui_col):
         """Handle square clicks"""
-        if self.game_over or self.ai_thinking:
+        if self.game_over or self.review_mode or self.ai_thinking:
             return
         
         # Convert GUI coordinates to board coordinates
@@ -400,6 +491,7 @@ class ChessVsAI:
                 self.selected_square = None
                 self.update_board()
                 self.update_status()
+                self.update_eval_bar()
                 self.check_game_end()
                 
                 # Schedule AI move
@@ -417,18 +509,56 @@ class ChessVsAI:
             winner = 'Black' if self.current_turn == 'white' else 'White'
             self.status_label.config(text=f"Checkmate! {winner} wins!")
             self.game_over = True
+            self.root.after(1000, self.enter_review_mode)
         elif self.chess_board.is_stalemate():
             self.status_label.config(text="Draw by stalemate!")
             self.game_over = True
+            self.root.after(1000, self.enter_review_mode)
         elif self.chess_board.is_insufficient_material():
             self.status_label.config(text="Draw by insufficient material!")
             self.game_over = True
+            self.root.after(1000, self.enter_review_mode)
         elif self.chess_board.is_fifty_moves():
             self.status_label.config(text="Draw by fifty-move rule!")
             self.game_over = True
+            self.root.after(1000, self.enter_review_mode)
         elif self.chess_board.is_repetition():
             self.status_label.config(text="Draw by repetition!")
             self.game_over = True
+            self.root.after(1000, self.enter_review_mode)
+
+    def enter_review_mode(self):
+        """Enter game review mode"""
+        self.review_mode = True
+        self.current_review_move = len(self.move_history)
+        self.setup_control_buttons()
+        self.update_board()
+        self.update_status()
+        self.update_eval_bar()
+
+    def exit_review(self):
+        """Exit review mode"""
+        self.review_mode = False
+        self.setup_control_buttons()
+        self.update_board()
+        self.update_status()
+        self.update_eval_bar()
+
+    def prev_move(self):
+        """Go to previous move in review"""
+        if self.current_review_move > 0:
+            self.current_review_move -= 1
+            self.update_board()
+            self.update_status()
+            self.update_eval_bar()
+
+    def next_move(self):
+        """Go to next move in review"""
+        if self.current_review_move < len(self.move_history):
+            self.current_review_move += 1
+            self.update_board()
+            self.update_status()
+            self.update_eval_bar()
 
     def update_board(self):
         """Update the visual representation of the board"""
@@ -448,39 +578,118 @@ class ChessVsAI:
                     continue
                 
                 # Get piece for current position
-                piece = self.chess_board.piece_at(square)
+                if self.review_mode and self.current_review_move < len(self.board_history):
+                    board_state = self.board_history[self.current_review_move]
+                    piece = board_state.piece_at(square)
+                else:
+                    piece = self.chess_board.piece_at(square)
                 
                 # Determine background color
                 bg_color = '#f0d9b5' if (gui_r + gui_c) % 2 == 0 else '#b58863'
                 
                 # Highlight selected square and legal moves
-                if self.selected_square and square == self.selected_square:
-                    bg_color = '#90EE90'
-                elif self.selected_square:
-                    legal_moves = [m.to_square for m in self.chess_board.legal_moves 
-                                 if m.from_square == self.selected_square]
-                    if square in legal_moves:
-                        bg_color = '#98FB98'
-                
-                # Highlight last move
-                if self.last_move and square in [self.last_move[0], self.last_move[1]]:
-                    bg_color = '#FFD700'
-                
-                # Highlight king in check
-                if self.chess_board.is_check():
-                    king_square = self.chess_board.king(self.current_turn == 'white')
-                    if square == king_square:
-                        bg_color = '#FF6B6B'
+                if not self.review_mode:
+                    if self.selected_square and square == self.selected_square:
+                        bg_color = '#90EE90'
+                    elif self.selected_square:
+                        legal_moves = [m.to_square for m in self.chess_board.legal_moves 
+                                     if m.from_square == self.selected_square]
+                        if square in legal_moves:
+                            bg_color = '#98FB98'
+                    
+                    # Highlight last move
+                    if self.last_move and square in [self.last_move[0], self.last_move[1]]:
+                        bg_color = '#FFD700'
+                    
+                    # Highlight king in check
+                    if self.chess_board.is_check():
+                        king_square = self.chess_board.king(self.current_turn == 'white')
+                        if square == king_square:
+                            bg_color = '#FF6B6B'
+                else:
+                    # Highlight move in review mode
+                    if self.current_review_move > 0:
+                        move = self.move_history[self.current_review_move - 1]['move']
+                        if square in [move.from_square, move.to_square]:
+                            bg_color = '#FFD700'
                 
                 # Set piece symbol and color
                 piece_symbol = self.PIECES.get(piece.symbol() if piece else '', '')
                 btn.config(text=piece_symbol, bg=bg_color)
+
+    def update_eval_bar(self):
+        """Update the evaluation bar"""
+        if not self.evaluations or self.current_review_move == 0:
+            self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75)
+            self.eval_label.config(text="0.00")
+            return
+        
+        eval_index = min(self.current_review_move - 1, len(self.evaluations) - 1)
+        eval_score = self.evaluations[eval_index]
+        
+        if isinstance(eval_score, str):  # Mate score
+            self.eval_label.config(text=eval_score)
+            # Set bar to extreme position for mate
+            if eval_score.startswith('M'):
+                self.eval_canvas.coords(self.eval_bar, 5, 10, 25, 75)
+                self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
+            else:
+                self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 140)
+                self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
+            return
+        
+        # Clamp score for display
+        score = max(min(float(eval_score), 5.0), -5.0)
+        
+        # Calculate bar position (150 pixels tall, centered at 75)
+        bar_height = int((score / 10.0) * 150)
+        
+        if score >= 0:
+            # White advantage
+            self.eval_canvas.coords(self.eval_bar, 5, 75 - bar_height, 25, 75)
+            self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
+        else:
+            # Black advantage
+            self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75 - bar_height)
+            self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
+        
+        self.eval_label.config(text=f"{eval_score:+.2f}" if isinstance(eval_score, (int, float)) else str(eval_score))
 
     def update_status(self):
         """Update status and analysis text"""
         if not hasattr(self, 'status_label'):
             return
         
+        if self.review_mode:
+            self.update_review_status()
+        else:
+            self.update_game_status()
+
+    def update_review_status(self):
+        """Update status during review mode"""
+        if self.current_review_move == len(self.move_history):
+            status = "Review: Final position"
+        elif self.current_review_move == 0:
+            status = "Review: Starting position"
+        else:
+            move_num = (self.current_review_move + 1) // 2
+            color = 'White' if self.current_review_move % 2 == 1 else 'Black'
+            move = self.move_history[self.current_review_move - 1]['move']
+            
+            # Get the board state before the move for SAN notation
+            prev_board = self.board_history[self.current_review_move - 1]
+            try:
+                move_text = prev_board.san(move)
+            except:
+                move_text = move.uci()
+            
+            status = f"Review: Move {move_num} ({color}) - {move_text}"
+        
+        self.status_label.config(text=status)
+        self.update_analysis_text()
+
+    def update_game_status(self):
+        """Update status during active game"""
         if self.game_over:
             return
         
@@ -495,12 +704,76 @@ class ChessVsAI:
         self.update_analysis_text()
 
     def update_analysis_text(self):
-        """Update the analysis text widget with move history"""
+        """Update the analysis text widget"""
         self.analysis_text.delete(1.0, tk.END)
-        self.analysis_text.insert(tk.END, "Move History:\n\n")
         
-        # Show last 15 moves
-        start_idx = max(0, len(self.move_history) - 15)
+        if self.review_mode:
+            self.show_move_analysis()
+        else:
+            self.show_move_history()
+
+    def show_move_analysis(self):
+        """Show analysis for the current move in review"""
+        if self.current_review_move == 0:
+            self.analysis_text.insert(tk.END, "Starting position\n")
+            return
+        
+        if self.current_review_move > len(self.move_history):
+            return
+        
+        move_index = self.current_review_move - 1
+        move = self.move_history[move_index]['move']
+        
+        # Get move notation
+        prev_board = self.board_history[move_index]
+        try:
+            move_text = prev_board.san(move)
+        except:
+            move_text = move.uci()
+        
+        self.analysis_text.insert(tk.END, f"Move: {move_text}\n\n")
+        
+        # Show evaluation change
+        if len(self.evaluations) > move_index:
+            curr_eval = self.evaluations[move_index]
+            prev_eval = self.evaluations[move_index - 1] if move_index > 0 else 0.0
+            
+            if isinstance(curr_eval, str) or isinstance(prev_eval, str):
+                self.analysis_text.insert(tk.END, "Mate position reached\n")
+            else:
+                eval_change = curr_eval - prev_eval
+                if move_index % 2 == 1:  # Black move, flip evaluation
+                    eval_change = -eval_change
+                
+                self.analysis_text.insert(tk.END, f"Evaluation: {curr_eval:+.2f}\n")
+                
+                if abs(eval_change) > 2.0:
+                    self.analysis_text.insert(tk.END, f"⚠️ Blunder! ({eval_change:+.2f})\n")
+                elif abs(eval_change) > 1.0:
+                    self.analysis_text.insert(tk.END, f"❌ Mistake ({eval_change:+.2f})\n")
+                elif abs(eval_change) > 0.5:
+                    self.analysis_text.insert(tk.END, f"⚡ Inaccuracy ({eval_change:+.2f})\n")
+                elif abs(eval_change) < 0.1:
+                    self.analysis_text.insert(tk.END, "✅ Excellent move!\n")
+        
+        # Show best move if different
+        if (len(self.best_moves) > move_index and 
+            self.best_moves[move_index] and 
+            self.best_moves[move_index] != move):
+            
+            best_move = self.best_moves[move_index]
+            try:
+                best_move_text = prev_board.san(best_move)
+                self.analysis_text.insert(tk.END, f"\nBest move was: {best_move_text}\n")
+            except:
+                pass
+
+    def show_move_history(self):
+        """Show recent move history"""
+        self.analysis_text.insert(tk.END, "Recent moves:\n\n")
+        
+        # Show last 10 moves
+        start_idx = max(0, len(self.move_history) - 10)
         
         for i in range(start_idx, len(self.move_history)):
             move_data = self.move_history[i]
@@ -529,6 +802,7 @@ class ChessVsAI:
         """Handle AI move generation"""
         if (self.game_over or 
             self.current_turn == self.player_side or 
+            self.review_mode or 
             self.ai_thinking):
             return
         
@@ -550,7 +824,17 @@ class ChessVsAI:
                     
             except Exception as e:
                 print(f"Ollama failed: {e}")
-                move = self.get_random_move()
+                
+                # Fallback to Stockfish
+                if self.engine:
+                    try:
+                        move = self.get_stockfish_move()
+                        print(f"Stockfish move: {move.uci()}")
+                    except Exception as e2:
+                        print(f"Stockfish failed: {e2}")
+                        move = self.get_random_move()
+                else:
+                    move = self.get_random_move()
             
             # Execute move on main thread
             def execute_move():
@@ -558,6 +842,7 @@ class ChessVsAI:
                 if move and self.make_move(move):
                     self.update_board()
                     self.update_status()
+                    self.update_eval_bar()
                     self.check_game_end()
                 
                 print(f"AI move took {time.time() - start_time:.2f} seconds")
@@ -625,6 +910,24 @@ class ChessVsAI:
             print(f"Ollama error: {e}")
             return None
 
+    def get_stockfish_move(self):
+        """Get move from Stockfish"""
+        if not self.engine:
+            return None
+        
+        try:
+            # Adjust thinking time based on game phase
+            time_limit = 3.0 if len(self.move_history) < 20 else 5.0
+            
+            result = self.engine.play(
+                self.chess_board,
+                chess.engine.Limit(time=time_limit, depth=15)
+            )
+            return result.move
+        except Exception as e:
+            print(f"Stockfish error: {e}")
+            return None
+
     def get_random_move(self):
         """Get random legal move as last resort"""
         legal_moves = list(self.chess_board.legal_moves)
@@ -656,6 +959,8 @@ class ChessVsAI:
                         ai_move = None
                         try:
                             ai_move = self.get_ollama_move()
+                            if not ai_move and self.engine:
+                                ai_move = self.get_stockfish_move()
                             if not ai_move:
                                 ai_move = self.get_random_move()
                         except:
