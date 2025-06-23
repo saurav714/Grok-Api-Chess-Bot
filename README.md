@@ -1,142 +1,163 @@
-Chess vs AI with LLM
-Overview
-This is a Python-based chess application that allows users to play against an AI opponent powered by either the Stockfish chess engine or the Ollama language model. The game features a graphical user interface (GUI) built with Tkinter, move history, position evaluation, and game review capabilities. Players can choose to play as either White or Black, switch sides, undo moves, resign, or test the AI's performance.
-Features
+♟️ Chess vs AI with LLM
+A Python-based chess application featuring a powerful AI opponent driven by the Ollama language model, with a fallback to the Stockfish chess engine. Enjoy an interactive GUI, move suggestions, game review tools, and various play modes — all packed into one simple yet robust chess interface.
 
-Interactive Chess Board: A Tkinter-based GUI with a responsive chess board that supports piece movement via clicks.
-AI Opponents:
-Primary AI: Ollama language model for move generation.
-Fallback AI: Stockfish chess engine (configurable).
-Random move generator as a last resort.
+🚀 Features
+♟️ Game Interface
+Interactive Chess Board: Tkinter-based GUI with click-to-move support.
 
+Responsive Design: Automatically resizes to fit your screen.
 
-Game Analysis:
-Real-time position evaluation with an evaluation bar.
-Move history display with Standard Algebraic Notation (SAN).
-Analysis of moves in review mode, highlighting blunders, mistakes, and inaccuracies.
+Pawn Promotion Dialog: Choose from Queen, Rook, Knight, or Bishop.
 
+🧠 AI Opponents
+Primary AI: Move generation using Ollama LLM.
 
-Game Modes:
+Fallback AI: Stockfish engine for precise, fast evaluations.
+
+Random Move Generator: Ensures playability when AI fails.
+
+📊 Game Analysis
+Real-time Evaluation Bar (requires Stockfish).
+
+Move History: Displayed in Standard Algebraic Notation (SAN).
+
+Review Mode: Step-by-step move analysis with identification of blunders, mistakes, and best moves.
+
+🕹️ Game Modes
 Play as White or Black.
-Review mode to analyze past games move-by-move.
-Test AI mode to simulate multiple games and evaluate performance.
 
+Switch Sides, Undo Moves, or Resign anytime.
 
-Additional Features:
-Move undo functionality.
-Resign option.
-Responsive board resizing.
-Pawn promotion dialog.
+Test AI Mode: Run simulations to evaluate AI performance.
+
+🧰 Additional Features
+Transposition table to cache repeated positions.
+
 Check, checkmate, stalemate, and other draw condition detection.
-Transposition table to cache AI moves for efficiency.
 
+User-friendly error handling for missing dependencies or engine failures.
 
+📦 Requirements
+Python 3.7+
 
-Requirements
-To run the application, you need the following dependencies:
+Install dependencies:
 
-Python 3.7 or higher
-Required Python packages:
-python-chess: For chess logic and board management.
-ollama: For AI move generation using the Ollama language model.
-python-dotenv: For loading environment variables.
-
-
-Stockfish chess engine (optional, for fallback AI):
-Download the appropriate Stockfish binary for your system from https://stockfishchess.org/download/.
-Specify the path to the Stockfish executable in the .env file or ensure it is in the default path.
-
-
-
-Install the required Python packages using:
+bash
+Copy
+Edit
 pip install python-chess ollama python-dotenv
+Optional: Download Stockfish and note the path to the binary.
 
-Installation
+⚙️ Installation
+Clone the repository:
 
-Clone or download this repository to your local machine.
-Ensure Python 3.7+ is installed.
-Install the required dependencies:pip install -r requirements.txt
+bash
+Copy
+Edit
+git clone https://github.com/your-username/chess-vs-ai.git
+cd chess-vs-ai
+Install dependencies:
 
-Alternatively, install individually as shown above.
+bash
+Copy
+Edit
+pip install -r requirements.txt
 (Optional) Install Stockfish:
-Download the Stockfish binary and note its path.
-Create a .env file in the project root (see Configuration section).
 
+Download the binary for your OS.
 
-Run the application:python chess_vs_ai.py
+Create a .env file in the project root:
 
-
-
-Configuration
-The application uses a .env file to configure the Stockfish path and Ollama settings. Create a .env file in the project root with the following optional variables:
+ini
+Copy
+Edit
 STOCKFISH_PATH=/path/to/stockfish
 OLLAMA_MODEL=phi3
 OLLAMA_TIMEOUT=5.0
+Run the application:
 
+bash
+Copy
+Edit
+python chess_vs_ai.py
+🛠️ Configuration
+Edit or create a .env file in the root directory:
 
-STOCKFISH_PATH: Path to the Stockfish executable (e.g., C:\Users\HP\Desktop\stockfish.exe on Windows).
-OLLAMA_MODEL: The Ollama model to use (default: phi3).
-OLLAMA_TIMEOUT: Timeout for Ollama responses in seconds (default: 5.0).
+ini
+Copy
+Edit
+STOCKFISH_PATH=/absolute/path/to/stockfish
+OLLAMA_MODEL=phi3
+OLLAMA_TIMEOUT=5.0
+STOCKFISH_PATH: Path to Stockfish binary (optional but recommended).
 
-If the .env file is missing or variables are not set, the application will use default values.
-Usage
+OLLAMA_MODEL: Ollama model name (default: phi3).
 
-Launch the application by running:python chess_vs_ai.py
+OLLAMA_TIMEOUT: Response timeout in seconds.
 
+🧩 Usage
+Once launched:
 
-The GUI will display a chess board with the following controls:
-New Game: Start a new game.
-Switch Side: Toggle between playing as White or Black.
-Undo Move: Undo the last move (or last two moves if AI has responded).
-Resign: Concede the game.
-Test AI: Run a simulation of three games to test AI performance.
+🎮 New Game: Start fresh.
 
+⚪/⚫ Switch Side: Play as White or Black.
 
-Click on a piece to select it, then click a target square to move. Legal moves are highlighted.
-If a pawn reaches the last rank, a promotion dialog will appear to choose a piece (Queen, Rook, Knight, or Bishop).
-After the game ends, enter Review Mode to analyze moves with evaluations and suggested best moves.
-In Review Mode, use Previous and Next buttons to navigate through moves, or Exit Review to return to normal mode.
+↩️ Undo Move: Undo last one/two moves.
 
-How It Works
+🏳️ Resign: End the game.
 
-GUI: Built with Tkinter, the board is an 8x8 grid of buttons that display chess pieces using Unicode symbols. The board is responsive and adjusts to window resizing.
-AI Move Generation:
-The application first attempts to get a move from the Ollama model using the current board's FEN (Forsyth-Edwards Notation).
-If Ollama fails or provides an invalid move, it falls back to Stockfish (if available) or a random legal move.
-A transposition table caches Ollama moves to improve performance for repeated positions.
+🧪 Test AI: Simulate 3 AI games.
 
+Click a piece, then click a destination to move. Legal moves are highlighted. Enter Review Mode after the game to navigate through each move and evaluation.
 
-Evaluation: Stockfish provides position evaluations (if available), displayed in an evaluation bar and used to identify blunders, mistakes, and inaccuracies.
-Review Mode: Allows post-game analysis with move-by-move navigation, showing evaluations and suggested best moves.
-Error Handling: The application gracefully handles missing dependencies, invalid moves, and engine failures.
+⚙️ How It Works
+GUI: Built with Tkinter using Unicode chess symbols on an 8x8 grid.
 
-Limitations
+AI Logic:
 
-Requires an active Ollama server running locally for AI move generation. Ensure the Ollama service is running before starting the application.
-Stockfish is optional but recommended for better AI performance and accurate evaluations. Without Stockfish, the AI may rely on random moves if Ollama fails.
-The application does not support online multiplayer or saving/loading games.
-The AI's strength depends on the Ollama model and Stockfish configuration (e.g., depth and time limits).
+Tries to generate a move using Ollama based on FEN.
 
-Troubleshooting
+Falls back to Stockfish (if set), or a random move.
 
-Stockfish not found: Ensure the STOCKFISH_PATH in the .env file points to a valid Stockfish executable.
-Ollama errors: Verify that the Ollama server is running and the specified model (e.g., phi3) is available.
-Missing dependencies: Install required packages using pip install python-chess ollama python-dotenv.
-GUI issues: Ensure Tkinter is available (it comes with standard Python installations). If the board doesn't display correctly, try resizing the window.
+Caches AI responses for repeated board states.
 
-Contributing
-Contributions are welcome! To contribute:
+Evaluation: Stockfish provides evaluations and is essential for game review insights.
 
-Fork the repository.
-Create a new branch for your feature or bug fix.
-Submit a pull request with a clear description of changes.
+❗ Limitations
+Requires local Ollama server running.
 
-Please ensure code follows PEP 8 style guidelines and includes appropriate error handling.
-License
-This project is licensed under the MIT License. See the LICENSE file for details.
-Acknowledgments
+Stockfish recommended for serious play and reviews.
 
-python-chess for chess logic and engine integration.
-Ollama for AI move generation.
-Stockfish for strong chess engine support.
-Unicode chess symbols for visual representation.
+No online multiplayer or save/load features (yet).
+
+Ollama model strength and response time may vary.
+
+🧩 Troubleshooting
+Issue	Fix
+Stockfish not found	Check STOCKFISH_PATH in .env.
+Ollama errors	Ensure Ollama server is running and OLLAMA_MODEL exists.
+GUI problems	Resize window or verify Tkinter is installed.
+Missing packages	Run pip install python-chess ollama python-dotenv.
+
+🤝 Contributing
+Fork the repo
+
+Create a feature branch
+
+Submit a pull request with a clear description
+
+Please follow PEP 8 and ensure proper error handling.
+
+📄 License
+MIT License — See the LICENSE file for details.
+
+🙏 Acknowledgments
+python-chess
+
+Ollama
+
+Stockfish
+
+Unicode symbols for clean board visuals
+
+Let me know if you'd like a badge section, logo/banner, or GitHub Actions CI workflow included too.
