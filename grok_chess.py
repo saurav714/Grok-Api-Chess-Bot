@@ -26,6 +26,9 @@ class ChessVsAI:
         self.eval_cache = {}  # Cache evaluations
         self.board_update_pending = False  # Debounce board updates
         self.legal_moves_cache = {}  # Cache legal moves for performance
+        self.move_times = []  # Track move times for performance monitoring
+        self.cache_hits = 0  # Track cache hit rate
+        self.cache_misses = 0  # Track cache miss rate
         
         # Load environment variables first
         load_dotenv()
@@ -212,7 +215,8 @@ class ChessVsAI:
                 ("Switch Side", self.switch_side),
                 ("Undo Move", self.undo_move),
                 ("Resign", self.resign),
-                ("Test AI", self.test_ai)
+                ("Test AI", self.test_ai),
+                ("Performance", self.show_performance_stats)
             ]
         else:
             buttons = [
@@ -451,9 +455,7 @@ class ChessVsAI:
         self.game_over = False
         self.last_move = None
         
-        self.update_board()
-        self.update_status()
-        self.update_eval_bar()
+        self.batch_update_gui()  # Use batched update
         return True
 
     def resign(self):
@@ -521,9 +523,7 @@ class ChessVsAI:
         if move in self.chess_board.legal_moves:
             if self.make_move(move):
                 self.selected_square = None
-                self.update_board()
-                self.update_status()
-                self.update_eval_bar()
+                self.batch_update_gui()  # Use batched update
                 self.check_game_end()
                 
                 # Schedule AI move with reduced delay
@@ -891,13 +891,14 @@ class ChessVsAI:
             # Execute move on main thread
             def execute_move():
                 self.ai_thinking = False
+                move_time = time.time() - start_time
+                self.move_times.append(move_time)
+                
                 if move and self.make_move(move):
-                    self.update_board()
-                    self.update_status()
-                    self.update_eval_bar()
+                    self.batch_update_gui()  # Use batched update
                     self.check_game_end()
                 
-                print(f"AI move took {time.time() - start_time:.2f} seconds")
+                print(f"AI move took {move_time:.2f} seconds")
             
             self.root.after_idle(execute_move)
         
@@ -973,7 +974,7 @@ class ChessVsAI:
 
     def get_random_move(self):
         """Get random legal move as last resort"""
-        legal_moves = list(self.chess_board.legal_moves)
+        legal_moves = self.get_legal_moves()
         if legal_moves:
             return random.choice(legal_moves)
         return None
@@ -995,7 +996,7 @@ class ChessVsAI:
                 while not self.game_over and moves_played < max_moves:
                     if self.current_turn == self.player_side:
                         # Random move for "player"
-                        move = random.choice(list(self.chess_board.legal_moves))
+                        move = random.choice(self.get_legal_moves())
                         self.make_move(move)
                     else:
                         # AI move
@@ -1060,13 +1061,93 @@ class ChessVsAI:
         cache_key = f"{fen}_{from_square}" if from_square is not None else fen
         
         if cache_key not in self.legal_moves_cache:
+            self.cache_misses += 1
             if from_square is not None:
                 moves = [m for m in self.chess_board.legal_moves if m.from_square == from_square]
             else:
                 moves = list(self.chess_board.legal_moves)
             self.legal_moves_cache[cache_key] = moves
+        else:
+            self.cache_hits += 1
         
         return self.legal_moves_cache[cache_key]
+
+    def get_performance_stats(self):
+        """Get performance statistics"""
+        total_cache_access = self.cache_hits + self.cache_misses
+        cache_hit_rate = (self.cache_hits / total_cache_access * 100) if total_cache_access > 0 else 0
+        
+        avg_move_time = sum(self.move_times) / len(self.move_times) if self.move_times else 0
+        
+        return {
+            'cache_hit_rate': f"{cache_hit_rate:.1f}%",
+            'avg_move_time': f"{avg_move_time:.3f}s",
+            'total_moves': len(self.move_times),
+            'cache_hits': self.cache_hits,
+            'cache_misses': self.cache_misses
+        }
+
+    def show_performance_stats(self):
+        """Show performance statistics in a popup window"""
+        stats = self.get_performance_stats()
+        
+        # Create popup window
+        popup = tk.Toplevel(self.root)
+        popup.title("Performance Statistics")
+        popup.geometry("300x200")
+        popup.transient(self.root)
+        popup.grab_set()
+        popup.configure(bg='#2c3e50')
+        
+        # Center the popup
+        popup.geometry("+%d+%d" % (
+            self.root.winfo_rootx() + 50,
+            self.root.winfo_rooty() + 50
+        ))
+        
+        # Title
+        tk.Label(
+            popup, 
+            text="Performance Statistics", 
+            font=('Arial', 14, 'bold'), 
+            fg='#ecf0f1', 
+            bg='#2c3e50'
+        ).pack(pady=10)
+        
+        # Stats
+        stats_text = f"""Cache Hit Rate: {stats['cache_hit_rate']}
+Average Move Time: {stats['avg_move_time']}
+Total Moves: {stats['total_moves']}
+Cache Hits: {stats['cache_hits']}
+Cache Misses: {stats['cache_misses']}"""
+        
+        tk.Label(
+            popup, 
+            text=stats_text, 
+            font=('Arial', 10), 
+            fg='#ecf0f1', 
+            bg='#2c3e50',
+            justify='left'
+        ).pack(pady=10)
+        
+        # Close button
+        tk.Button(
+            popup, 
+            text="Close", 
+            command=popup.destroy, 
+            font=('Arial', 10),
+            bg='#3498db',
+            fg='white',
+            relief='flat',
+            padx=20
+        ).pack(pady=10)
+
+    def batch_update_gui(self):
+        """Batch update GUI elements for better performance"""
+        if hasattr(self, 'root'):
+            self.update_board()
+            self.update_status()
+            self.update_eval_bar()
 
     def run(self):
         """Run the application"""
