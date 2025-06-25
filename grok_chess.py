@@ -9,6 +9,7 @@ import threading
 import random
 import os
 from dotenv import load_dotenv
+from functools import lru_cache
 
 class ChessVsAI:
     def __init__(self):
@@ -21,18 +22,22 @@ class ChessVsAI:
         self.review_mode = False
         self.current_review_move = 0
         self.ai_thinking = False  # Prevent multiple AI moves
+        self.last_eval_time = 0  # Track last evaluation time
+        self.eval_cache = {}  # Cache evaluations
+        self.board_update_pending = False  # Debounce board updates
+        self.legal_moves_cache = {}  # Cache legal moves for performance
         
         # Load environment variables first
         load_dotenv()
         
-        # Stockfish configuration
+        # Stockfish configuration - optimized for speed
         self.stockfish_path = os.getenv("STOCKFISH_PATH", r"C:\Users\HP\Desktop\Grok Api Chess Bot\stockfish.exe")
         self.engine = None
         self.init_stockfish()
         
-        # Ollama configuration
+        # Ollama configuration - optimized for speed
         self.ollama_model = os.getenv("OLLAMA_MODEL", "phi3")
-        self.ollama_timeout = float(os.getenv("OLLAMA_TIMEOUT", "5.0"))
+        self.ollama_timeout = float(os.getenv("OLLAMA_TIMEOUT", "3.0"))  # Reduced timeout
         
         # Initialize GUI components
         self.squares = [[None for _ in range(8)] for _ in range(8)]
@@ -40,16 +45,20 @@ class ChessVsAI:
         self.reset_game()
 
     def init_stockfish(self):
-        """Initialize Stockfish engine with error handling"""
+        """Initialize Stockfish engine with optimized settings for speed"""
         if os.path.exists(self.stockfish_path):
             try:
                 self.engine = chess.engine.SimpleEngine.popen_uci(self.stockfish_path)
+                # Optimized configuration for speed
                 self.engine.configure({
-                    "Threads": min(4, os.cpu_count() or 2),
-                    "Hash": 256,
-                    "UCI_LimitStrength": False
+                    "Threads": min(2, os.cpu_count() or 1),  # Reduced threads
+                    "Hash": 128,  # Reduced hash size
+                    "UCI_LimitStrength": False,
+                    "Move Overhead": 10,  # Reduced overhead
+                    "Minimum Thinking Time": 0,  # No minimum thinking time
+                    "UCI_Chess960": False
                 })
-                print("Stockfish loaded successfully.")
+                print("Stockfish loaded successfully with speed optimizations.")
             except Exception as e:
                 print(f"Failed to load Stockfish: {e}")
                 self.engine = None
@@ -71,6 +80,9 @@ class ChessVsAI:
         self.current_review_move = 0
         self.ai_thinking = False
         self.transposition_table.clear()
+        self.eval_cache.clear()  # Clear evaluation cache
+        self.legal_moves_cache.clear()  # Clear legal moves cache
+        self.last_eval_time = 0
         
         if hasattr(self, 'root'):
             self.update_board()
@@ -362,8 +374,15 @@ class ChessVsAI:
         self.move_history.append(move_data)
         self.board_history.append(copy.deepcopy(self.chess_board))
         
-        # Get evaluation if engine is available
-        self.get_position_evaluation()
+        # Get evaluation less frequently for better performance
+        current_time = time.time()
+        if current_time - self.last_eval_time > 1.0:  # Only evaluate every 1 second (increased from 0.5)
+            self.get_position_evaluation()
+            self.last_eval_time = current_time
+        else:
+            # Use cached evaluation or default
+            self.evaluations.append(self.evaluations[-1] if self.evaluations else 0.0)
+            self.best_moves.append(None)
         
         # Update game state
         self.current_turn = 'black' if self.current_turn == 'white' else 'white'
@@ -371,21 +390,37 @@ class ChessVsAI:
         return True
 
     def get_position_evaluation(self):
-        """Get position evaluation from engine"""
+        """Get position evaluation from engine with caching"""
+        fen = self.chess_board.fen()
+        
+        # Check cache first
+        if fen in self.eval_cache:
+            cached_eval = self.eval_cache[fen]
+            self.evaluations.append(cached_eval['score'])
+            self.best_moves.append(cached_eval['best_move'])
+            return
+        
         if self.engine:
             try:
+                # Faster evaluation with reduced depth and time
                 eval_info = self.engine.analyse(
                     self.chess_board, 
-                    chess.engine.Limit(depth=10, time=0.5)  # Optimized for speed
+                    chess.engine.Limit(depth=6, time=0.2)  # Reduced depth and time
                 )
                 if eval_info['score'].is_mate():
                     eval_score = f"M{eval_info['score'].mate()}"
                 else:
                     centipawns = eval_info['score'].relative.cp
                     eval_score = centipawns / 100.0 if centipawns is not None else 0.0
-                self.evaluations.append(eval_score)
+                
                 pv = eval_info.get('pv', [])
-                self.best_moves.append(pv[0] if pv else None)
+                best_move = pv[0] if pv else None
+                
+                # Cache the result
+                self.eval_cache[fen] = {'score': eval_score, 'best_move': best_move}
+                
+                self.evaluations.append(eval_score)
+                self.best_moves.append(best_move)
             except Exception as e:
                 print(f"Evaluation error: {e}")
                 self.evaluations.append(0.0)
@@ -491,9 +526,9 @@ class ChessVsAI:
                 self.update_eval_bar()
                 self.check_game_end()
                 
-                # Schedule AI move
+                # Schedule AI move with reduced delay
                 if not self.game_over and self.current_turn != self.player_side:
-                    self.root.after(500, self.ai_move)
+                    self.root.after(200, self.ai_move)  # Reduced delay from 500ms to 200ms
         else:
             messagebox.showinfo("Invalid Move", "That move is not legal!")
         
@@ -558,8 +593,21 @@ class ChessVsAI:
             self.update_eval_bar()
 
     def update_board(self):
-        """Update the visual representation of the board"""
+        """Update the visual representation of the board with debouncing"""
         if not hasattr(self, 'squares') or not self.squares:
+            return
+        
+        # Debounce board updates with shorter delay for better responsiveness
+        if self.board_update_pending:
+            return
+        
+        self.board_update_pending = True
+        self.root.after(5, self._update_board_actual)  # Reduced from 10ms to 5ms
+
+    def _update_board_actual(self):
+        """Actual board update implementation"""
+        if not hasattr(self, 'squares') or not self.squares:
+            self.board_update_pending = False
             return
         
         for r in range(8):
@@ -589,8 +637,7 @@ class ChessVsAI:
                     if self.selected_square and square == self.selected_square:
                         bg_color = '#90EE90'
                     elif self.selected_square:
-                        legal_moves = [m.to_square for m in self.chess_board.legal_moves 
-                                     if m.from_square == self.selected_square]
+                        legal_moves = [m.to_square for m in self.get_legal_moves(self.selected_square)]
                         if square in legal_moves:
                             bg_color = '#98FB98'
                     
@@ -613,6 +660,8 @@ class ChessVsAI:
                 # Set piece symbol and color
                 piece_symbol = self.PIECES.get(piece.symbol() if piece else '', '')
                 btn.config(text=piece_symbol, bg=bg_color)
+        
+        self.board_update_pending = False
 
     def update_eval_bar(self):
         """Update the evaluation bar"""
@@ -856,7 +905,7 @@ class ChessVsAI:
         threading.Thread(target=get_ai_move, daemon=True).start()
 
     def get_ollama_move(self):
-        """Get move from Ollama"""
+        """Get move from Ollama with optimized settings"""
         fen = self.chess_board.fen()
         
         # Check transposition table first
@@ -869,16 +918,9 @@ class ChessVsAI:
             except:
                 pass
         
-        # Prepare prompt for Ollama
-        opening_hints = ""
-        if len(self.move_history) < 10:
-            if self.current_turn == 'white':
-                opening_hints = " Consider opening moves like e4, d4, Nf3, c4."
-            else:
-                opening_hints = " Consider responses like e5, e6, c5, d5, Nf6."
-        
+        # Prepare prompt for Ollama - simplified for speed
         prompt = (f"Chess position FEN: {fen}\n"
-                 f"Generate the best move in UCI format (e.g., e2e4, g1f3).{opening_hints}\n"
+                 f"Generate the best move in UCI format (e.g., e2e4, g1f3).\n"
                  f"Respond with ONLY the UCI move, nothing else.")
         
         try:
@@ -886,9 +928,9 @@ class ChessVsAI:
                 model=self.ollama_model,
                 prompt=prompt,
                 options={
-                    'temperature': 0.7,
-                    'top_p': 0.9,
-                    'num_predict': 10
+                    'temperature': 0.3,  # Reduced temperature for more consistent moves
+                    'top_p': 0.8,  # Reduced top_p
+                    'num_predict': 5  # Reduced predictions
                 }
             )
             
@@ -914,15 +956,15 @@ class ChessVsAI:
             return None
 
     def get_stockfish_move(self):
-        """Get move from Stockfish"""
+        """Get move from Stockfish with optimized settings"""
         if not self.engine:
             return None
         
         try:
-            # Lower time and depth for faster move
+            # Optimized for speed - reduced time and depth
             result = self.engine.play(
                 self.chess_board,
-                chess.engine.Limit(time=0.5, depth=10)  # Optimized for speed
+                chess.engine.Limit(time=0.3, depth=8)  # Further reduced for speed
             )
             return result.move
         except Exception as e:
@@ -1011,6 +1053,20 @@ class ChessVsAI:
             
         self.player_side = 'black' if self.player_side == 'white' else 'white'
         self.new_game()
+
+    def get_legal_moves(self, from_square=None):
+        """Get legal moves with caching for better performance"""
+        fen = self.chess_board.fen()
+        cache_key = f"{fen}_{from_square}" if from_square is not None else fen
+        
+        if cache_key not in self.legal_moves_cache:
+            if from_square is not None:
+                moves = [m for m in self.chess_board.legal_moves if m.from_square == from_square]
+            else:
+                moves = list(self.chess_board.legal_moves)
+            self.legal_moves_cache[cache_key] = moves
+        
+        return self.legal_moves_cache[cache_key]
 
     def run(self):
         """Run the application"""
