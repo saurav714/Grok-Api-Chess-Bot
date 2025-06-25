@@ -199,13 +199,12 @@ class ChessVsAI:
                 ("New Game", self.new_game),
                 ("Switch Side", self.switch_side),
                 ("Undo Move", self.undo_move),
-                ("Resign", self.resign),
-                ("Test AI", self.test_ai)
+                ("Resign", self.resign)
             ]
         else:
             buttons = [
-                ("◀ Previous", self.prev_move),
-                ("Next ▶", self.next_move),
+                ("\u25C0 Previous", self.prev_move),
+                ("Next \u25B6", self.next_move),
                 ("Exit Review", self.exit_review),
                 ("New Game", self.new_game)
             ]
@@ -934,62 +933,6 @@ class ChessVsAI:
         if legal_moves:
             return random.choice(legal_moves)
         return None
-
-    def test_ai(self):
-        """Test AI by playing several games"""
-        if self.ai_thinking:
-            return
-            
-        def run_test():
-            results = []
-            for game_num in range(3):
-                print(f"Starting test game {game_num + 1}")
-                self.reset_game()
-                
-                moves_played = 0
-                max_moves = 100  # Prevent infinite games
-                
-                while not self.game_over and moves_played < max_moves:
-                    if self.current_turn == self.player_side:
-                        # Random move for "player"
-                        move = random.choice(list(self.chess_board.legal_moves))
-                        self.make_move(move)
-                    else:
-                        # AI move
-                        ai_move = None
-                        try:
-                            ai_move = self.get_ollama_move()
-                            if not ai_move and self.engine:
-                                ai_move = self.get_stockfish_move()
-                            if not ai_move:
-                                ai_move = self.get_random_move()
-                        except:
-                            ai_move = self.get_random_move()
-                        
-                        if ai_move:
-                            self.make_move(ai_move)
-                    
-                    moves_played += 1
-                    self.check_game_end()
-                
-                result = self.chess_board.result()
-                results.append(result)
-                print(f"Test game {game_num + 1} result: {result}")
-            
-            # Update UI on main thread
-            def show_results():
-                wins = results.count('1-0' if self.player_side == 'white' else '0-1')
-                losses = results.count('0-1' if self.player_side == 'white' else '1-0')
-                draws = results.count('1/2-1/2')
-                
-                result_text = f"Test Results: {wins}W-{losses}L-{draws}D"
-                self.status_label.config(text=result_text)
-                print(f"Final test results: {result_text}")
-            
-            self.root.after(0, show_results)
-        
-        # Run test in background
-        threading.Thread(target=run_test, daemon=True).start()
 
     def new_game(self):
         """Start a new game"""
