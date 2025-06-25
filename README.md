@@ -33,6 +33,7 @@ Switch Sides, Undo Moves, or Resign anytime.
 Test AI Mode: Run simulations to evaluate AI performance.
 
 🧰 Additional Features
+
 Transposition table to cache repeated positions.
 
 Check, checkmate, stalemate, and other draw condition detection.
@@ -58,8 +59,9 @@ Copy
 Edit
 git clone https://github.com/your-username/chess-vs-ai.git
 cd chess-vs-ai
-Install dependencies:
 
+
+Install dependencies:
 bash
 Copy
 Edit
@@ -82,7 +84,6 @@ bash
 Copy
 Edit
 python chess_vs_ai.py
-
 
 
 🛠️ Configuration
