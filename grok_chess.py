@@ -376,19 +376,16 @@ class ChessVsAI:
             try:
                 eval_info = self.engine.analyse(
                     self.chess_board, 
-                    chess.engine.Limit(depth=15, time=2.0)
+                    chess.engine.Limit(depth=10, time=0.5)  # Optimized for speed
                 )
-                
                 if eval_info['score'].is_mate():
                     eval_score = f"M{eval_info['score'].mate()}"
                 else:
                     centipawns = eval_info['score'].relative.cp
                     eval_score = centipawns / 100.0 if centipawns is not None else 0.0
-                
                 self.evaluations.append(eval_score)
                 pv = eval_info.get('pv', [])
                 self.best_moves.append(pv[0] if pv else None)
-                
             except Exception as e:
                 print(f"Evaluation error: {e}")
                 self.evaluations.append(0.0)
@@ -626,34 +623,40 @@ class ChessVsAI:
         
         eval_index = min(self.current_review_move - 1, len(self.evaluations) - 1)
         eval_score = self.evaluations[eval_index]
-        
-        if isinstance(eval_score, str):  # Mate score
-            self.eval_label.config(text=eval_score)
-            # Set bar to extreme position for mate
-            if eval_score.startswith('M'):
-                self.eval_canvas.coords(self.eval_bar, 5, 10, 25, 75)
+
+        # Mate display
+        if isinstance(eval_score, str) and eval_score.startswith('M'):
+            # White mates: bar to top, Black mates: bar to bottom
+            mate_val = int(eval_score[1:]) if eval_score[1:].isdigit() else 0
+            if mate_val > 0:
+                # White is mating
+                self.eval_canvas.coords(self.eval_bar, 5, 0, 25, 150)
                 self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
             else:
-                self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 140)
+                # Black is mating
+                self.eval_canvas.coords(self.eval_bar, 5, 0, 25, 150)
                 self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
+            self.eval_label.config(text=eval_score)
             return
-        
+
         # Clamp score for display
-        score = max(min(float(eval_score), 5.0), -5.0)
-        
-        # Calculate bar position (150 pixels tall, centered at 75)
-        bar_height = int((score / 10.0) * 150)
-        
+        try:
+            score = float(eval_score)
+        except Exception:
+            score = 0.0
+
+        score = max(min(score, 5.0), -5.0)  # Clamp between -5 and +5
+
+        # Map score to bar position: +5 = top (white), -5 = bottom (black)
+        # Canvas height is 150, so y = 150 - ((score+5)/10)*150
+        y = int(150 - ((score + 5) / 10) * 150)
+        self.eval_canvas.coords(self.eval_bar, 5, y, 25, 150)
         if score >= 0:
-            # White advantage
-            self.eval_canvas.coords(self.eval_bar, 5, 75 - bar_height, 25, 75)
             self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
         else:
-            # Black advantage
-            self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75 - bar_height)
             self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
-        
-        self.eval_label.config(text=f"{eval_score:+.2f}" if isinstance(eval_score, (int, float)) else str(eval_score))
+
+        self.eval_label.config(text=f"{score:+.2f}")
 
     def update_status(self):
         """Update status and analysis text"""
@@ -847,7 +850,7 @@ class ChessVsAI:
                 
                 print(f"AI move took {time.time() - start_time:.2f} seconds")
             
-            self.root.after(0, execute_move)
+            self.root.after_idle(execute_move)
         
         # Start AI thinking in background thread
         threading.Thread(target=get_ai_move, daemon=True).start()
@@ -916,12 +919,10 @@ class ChessVsAI:
             return None
         
         try:
-            # Adjust thinking time based on game phase
-            time_limit = 3.0 if len(self.move_history) < 20 else 5.0
-            
+            # Lower time and depth for faster move
             result = self.engine.play(
                 self.chess_board,
-                chess.engine.Limit(time=time_limit, depth=15)
+                chess.engine.Limit(time=0.5, depth=10)  # Optimized for speed
             )
             return result.move
         except Exception as e:
