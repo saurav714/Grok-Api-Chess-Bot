@@ -759,10 +759,17 @@ class ChessVsAI:
         self.status_label.config(text=status)
         self.update_analysis_text()
 
-    def show_move_analysis(self):
-        """Show analysis for the current move in review with Stockfish-based explanations"""
+    def update_analysis_text(self):
+        """Update the analysis text widget"""
         self.analysis_text.delete(1.0, tk.END)
         
+        if self.review_mode:
+            self.show_move_analysis()
+        else:
+            self.show_move_history()
+
+    def show_move_analysis(self):
+        """Show analysis for the current move in review"""
         if self.current_review_move == 0:
             self.analysis_text.insert(tk.END, "Starting position\n")
             return
@@ -792,19 +799,14 @@ class ChessVsAI:
                 
                 self.analysis_text.insert(tk.END, f"Evaluation: {curr_eval:+.2f}\n")
                 
-                # Determine move quality and provide Stockfish-based explanation
                 if abs(eval_change) > 2.0:
                     self.analysis_text.insert(tk.END, f"⚠️ Blunder! ({eval_change:+.2f})\n")
-                    self.explain_move_quality(prev_board, move, "This move significantly weakens the position, often losing material or allowing a strong counterattack.")
                 elif abs(eval_change) > 1.0:
                     self.analysis_text.insert(tk.END, f"❌ Mistake ({eval_change:+.2f})\n")
-                    self.explain_move_quality(prev_board, move, "This move gives the opponent a notable advantage, potentially missing a key opportunity or allowing a strong response.")
                 elif abs(eval_change) > 0.5:
                     self.analysis_text.insert(tk.END, f"⚡ Inaccuracy ({eval_change:+.2f})\n")
-                    self.explain_move_quality(prev_board, move, "This move is suboptimal, slightly worsening the position or missing a better alternative.")
                 elif abs(eval_change) < 0.1:
                     self.analysis_text.insert(tk.END, "✅ Excellent move!\n")
-                    self.explain_move_quality(prev_board, move, "This move maintains or improves the position effectively, following strong chess principles.")
         
         if (len(self.best_moves) > self.current_review_move - 1 and 
             self.best_moves[self.current_review_move - 1] and 
@@ -817,72 +819,8 @@ class ChessVsAI:
             except:
                 pass
 
-    def explain_move_quality(self, board, move, quality_text):
-        """Provide a detailed Stockfish-based explanation for the move quality"""
-        if not self.engine:
-            self.analysis_text.insert(tk.END, f"{quality_text}\nStockfish not available for detailed analysis.\n")
-            return
-        
-        try:
-            # Analyze the position before and after the move
-            board_before = copy.deepcopy(board)
-            board_after = copy.deepcopy(board)
-            board_after.push(move)
-            
-            # Get Stockfish analysis for the best move
-            analysis = self.engine.analyse(board_before, chess.engine.Limit(depth=15, time=2.0))
-            pv = analysis.get('pv', [])
-            best_move = pv[0] if pv else None
-            
-            # Provide specific reasons why the move is weak or strong
-            self.analysis_text.insert(tk.END, f"{quality_text}\n")
-            
-            if best_move and best_move != move:
-                try:
-                    best_move_san = board_before.san(best_move)
-                    self.analysis_text.insert(tk.END, f"Stockfish suggests {best_move_san} was better because:\n")
-                    
-                    # Check for tactical reasons
-                    if board_before.is_capture(move):
-                        self.analysis_text.insert(tk.END, "- This move captures material but may expose pieces or weaken the position.\n")
-                    if board_after.is_check():
-                        self.analysis_text.insert(tk.END, "- This move leads to a check, altering the position's dynamics.\n")
-                    if board_before.is_pinned(board_before.turn, move.to_square):
-                        self.analysis_text.insert(tk.END, "- This move involves a pinned piece, limiting its effectiveness.\n")
-                    
-                    # Positional analysis
-                    if board_before.piece_at(move.from_square).piece_type == chess.KING:
-                        self.analysis_text.insert(tk.END, "- Moving the king too early can compromise safety.\n")
-                    elif board_before.piece_at(move.from_square).piece_type == chess.PAWN:
-                        self.analysis_text.insert(tk.END, "- Pawn moves can create weaknesses or open lines for the opponent.\n")
-                    
-                    # Compare evaluations
-                    best_eval = self.engine.analyse(board_before, chess.engine.Limit(depth=10, time=1.0))['score'].relative
-                    move_eval = self.engine.analyse(board_after, chess.engine.Limit(depth=10, time=1.0))['score'].relative
-                    
-                    if best_eval.is_mate():
-                        best_score = f"M{best_eval.mate()}"
-                    else:
-                        best_score = best_eval.cp / 100.0 if best_eval.cp is not None else 0.0
-                        
-                    if move_eval.is_mate():
-                        move_score = f"M{move_eval.mate()}"
-                    else:
-                        move_score = move_eval.cp / 100.0 if move_eval.cp is not None else 0.0
-                        
-                    self.analysis_text.insert(tk.END, f"- Best move evaluation: {best_score}, Played move evaluation: {move_score}\n")
-                except Exception as e:
-                    self.analysis_text.insert(tk.END, f"Error analyzing best move: {str(e)}\n")
-            else:
-                self.analysis_text.insert(tk.END, "- This move aligns with Stockfish's top recommendation.\n")
-                
-        except Exception as e:
-            self.analysis_text.insert(tk.END, f"Error in Stockfish analysis: {str(e)}\n")
-            traceback.print_exc()
-
     def show_move_history(self):
         """Show recent move history"""
-        self.analysis_text.delete(1.0, tk.END)
         self.analysis_text.insert(tk.END, "Recent moves:\n\n")
         start_idx = max(0, len(self.move_history) - 10)
         
@@ -907,15 +845,6 @@ class ChessVsAI:
                 print(f"Error generating SAN for move {move.uci()}: {e}")
                 traceback.print_exc()
                 continue
-
-    def update_analysis_text(self):
-        """Update the analysis text widget"""
-        self.analysis_text.delete(1.0, tk.END)
-        
-        if self.review_mode:
-            self.show_move_analysis()
-        else:
-            self.show_move_history()
 
     def ai_move(self):
         """Handle AI move generation"""
