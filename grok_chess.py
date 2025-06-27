@@ -27,6 +27,7 @@ class ChessVsAI:
         self.current_review_move = 0
         self.ai_thinking = False
         self.board_lock = threading.Lock()
+        self.pgn_comments = {}  # Store PGN comments
         
         # Load environment variables
         load_dotenv()
@@ -83,6 +84,7 @@ class ChessVsAI:
                 self.current_review_move = 0
                 self.ai_thinking = False
                 self.transposition_table.clear()
+                self.pgn_comments = {}
             
             if hasattr(self, 'root'):
                 self.update_board()
@@ -234,7 +236,8 @@ class ChessVsAI:
                     ("Switch Side", self.switch_side),
                     ("Undo Move", self.undo_move),
                     ("Resign", self.resign),
-                    ("Save PGN", self.save_pgn)
+                    ("Save PGN", self.save_pgn),
+                    ("Load PGN", self.load_pgn)
                 ]
             else:
                 buttons = [
@@ -242,7 +245,8 @@ class ChessVsAI:
                     ("Next \u25B6", self.next_move),
                     ("Exit Review", self.exit_review),
                     ("New Game", self.new_game),
-                    ("Save PGN", self.save_pgn)
+                    ("Save PGN", self.save_pgn),
+                    ("Load PGN", self.load_pgn)
                 ]
 
             for text, command in buttons:
@@ -576,6 +580,74 @@ class ChessVsAI:
             messagebox.showerror("Error", f"Failed to save PGN: {str(e)}")
             traceback.print_exc()
 
+    def load_pgn(self):
+        """Load a PGN file and enter review mode"""
+        try:
+            if self.ai_thinking:
+                messagebox.showinfo("Wait", "Please wait for AI to finish thinking")
+                return
+
+            file_path = filedialog.askopenfilename(
+                filetypes=[("PGN files", "*.pgn"), ("All files", "*.*")],
+                title="Load PGN File"
+            )
+            if not file_path:
+                return
+
+            with open(file_path, 'r', encoding='utf-8') as f:
+                game = chess.pgn.read_game(f)
+                if not game:
+                    messagebox.showerror("Error", "Invalid or empty PGN file")
+                    return
+
+            # Reset game state
+            with self.board_lock:
+                self.reset_game()
+                self.chess_board = game.board()
+                self.move_history = []
+                self.board_history = [copy.deepcopy(self.chess_board)]
+                self.evaluations = [0.0]
+                self.best_moves = [None]
+                self.pgn_comments = {}
+
+                # Replay moves and compute evaluations
+                node = game
+                move_number = 0
+                while node.variations:
+                    move = node.variation(0).move
+                    comment = node.variation(0).comment
+                    if comment:
+                        self.pgn_comments[move_number] = comment
+                    move_data = {'move': move, 'board': copy.deepcopy(self.chess_board)}
+                    self.chess_board.push(move)
+                    self.move_history.append(move_data)
+                    self.board_history.append(copy.deepcopy(self.chess_board))
+                    self.get_position_evaluation()
+                    node = node.variation(0)
+                    move_number += 1
+
+                # Set game result and headers
+                self.game_over = True
+                self.player_side = 'white' if game.headers.get("White", "").lower() == "player" else 'black'
+                result = game.headers.get("Result", "*")
+                if result == "1-0":
+                    status = "White wins!"
+                elif result == "0-1":
+                    status = "Black wins!"
+                elif result == "1/2-1/2":
+                    status = "Draw!"
+                else:
+                    status = "Game loaded"
+                self.status_label.config(text=status)
+
+            # Enter review mode
+            self.enter_review_mode()
+            messagebox.showinfo("Success", f"Loaded PGN from {file_path}")
+        except Exception as e:
+            print(f"Load PGN error: {e}")
+            traceback.print_exc()
+            messagebox.showerror("Error", f"Failed to load PGN: {str(e)}")
+
     def on_click(self, gui_row, gui_col):
         """Handle square clicks"""
         try:
@@ -667,7 +739,7 @@ class ChessVsAI:
             with self.board_lock:
                 if self.chess_board.is_checkmate():
                     winner = 'Black' if self.current_turn == 'white' else 'White'
-                    self.status_label.config(text=f"Checkmate! {winner} wins!")
+                    self.status_label.config(text=f"发行Checkmate! {winner} wins!")
                     self.game_over = True
                     self.auto_save_pgn()
                     self.root.after(1000, self.enter_review_mode)
@@ -905,7 +977,7 @@ class ChessVsAI:
         try:
             self.analysis_text.delete(1.0, tk.END)
             
-            if self.review_mode:
+            if self.current_review_move > 0 and self.current_review_move <= len(self.move_history):
                 self.show_move_analysis()
             else:
                 self.show_move_history()
@@ -964,6 +1036,9 @@ class ChessVsAI:
                     self.analysis_text.insert(tk.END, f"\nBest move was: {best_move_text}\n")
                 except:
                     pass
+
+            if self.current_review_move - 1 in self.pgn_comments:
+                self.analysis_text.insert(tk.END, f"\nComment: {self.pgn_comments[self.current_review_move - 1]}\n")
         except Exception as e:
             print(f"Show move analysis error: {e}")
             traceback.print_exc()
@@ -1030,7 +1105,7 @@ class ChessVsAI:
                     
                     if self.engine:
                         try:
-                            move = self.get_stockfish_move()
+                            move = self.get_stockfish-move()
                             print(f"Stockfish move: {move.uci()}")
                             self.debug_text.insert(tk.END, f"Stockfish move: {move.uci()}\n")
                         except Exception as e2:
