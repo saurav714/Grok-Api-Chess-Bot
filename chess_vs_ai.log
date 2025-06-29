@@ -1,0 +1,108 @@
+2025-06-29 09:18:55,923 [INFO] Initializing ChessVsAI
+2025-06-29 09:18:56,506 [INFO] Stockfish loaded successfully.
+2025-06-29 09:18:59,002 [INFO] Clicked square: e2
+2025-06-29 09:18:59,002 [INFO] Selected piece: P at e2
+2025-06-29 09:19:00,659 [INFO] Clicked square: e4
+2025-06-29 09:19:01,719 [INFO] Generating Ollama move for FEN: rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR b KQkq - 0 1
+2025-06-29 09:19:03,767 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:06,813 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:09,850 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:09,854 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1082, in get_ai_move
+    raise Exception("Ollama failed to provide valid move")
+Exception: Ollama failed to provide valid move
+2025-06-29 09:19:09,981 [INFO] Stockfish move: e7e5
+2025-06-29 09:19:10,192 [INFO] AI move took 8.47 seconds
+2025-06-29 09:19:12,489 [INFO] Clicked square: g1
+2025-06-29 09:19:12,492 [INFO] Selected piece: N at g1
+2025-06-29 09:19:13,622 [INFO] Clicked square: f3
+2025-06-29 09:19:14,288 [INFO] Generating Ollama move for FEN: rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
+2025-06-29 09:19:16,322 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:19,353 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:22,395 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1170, in get_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-06-29 09:19:22,397 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1082, in get_ai_move
+    raise Exception("Ollama failed to provide valid move")
+Exception: Ollama failed to provide valid move
+2025-06-29 09:19:22,550 [INFO] Stockfish move: b8c6
+2025-06-29 09:19:22,702 [INFO] AI move took 8.41 seconds

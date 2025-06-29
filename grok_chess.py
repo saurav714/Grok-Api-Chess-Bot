@@ -11,11 +11,25 @@ import random
 import os
 from datetime import datetime
 from dotenv import load_dotenv
-import traceback
+import logging
 from collections import OrderedDict
+
+def setup_logging():
+    """Configure logging to file and console."""
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(message)s',
+        handlers=[
+            logging.FileHandler('chess_vs_ai.log'),
+            logging.StreamHandler()
+        ]
+    )
 
 class ChessVsAI:
     def __init__(self):
+        """Initialize the Chess vs AI application."""
+        setup_logging()
+        logging.info("Initializing ChessVsAI")
         self.PIECES = {
             'K': '♔', 'Q': '♕', 'R': '♖', 'B': '♗', 'N': '♘', 'P': '♙',
             'k': '♚', 'q': '♛', 'r': '♜', 'b': '♝', 'n': '♞', 'p': '♟'
@@ -47,10 +61,10 @@ class ChessVsAI:
         self.reset_game()
 
     def init_stockfish(self):
-        """Initialize Stockfish engine with error handling"""
+        """Initialize Stockfish engine with error handling."""
         try:
             if not os.path.exists(self.stockfish_path):
-                print(f"Stockfish not found at '{self.stockfish_path}'")
+                logging.error(f"Stockfish not found at '{self.stockfish_path}'")
                 self.engine = None
                 messagebox.showerror("Stockfish Error", f"Stockfish executable not found at '{self.stockfish_path}'. Please set STOCKFISH_PATH in .env file.")
                 return
@@ -60,15 +74,14 @@ class ChessVsAI:
                 "Hash": 256,
                 "UCI_LimitStrength": False
             })
-            print("Stockfish loaded successfully.")
+            logging.info("Stockfish loaded successfully.")
         except Exception as e:
-            print(f"Failed to load Stockfish: {e}")
-            traceback.print_exc()
+            logging.error(f"Failed to load Stockfish: {e}", exc_info=True)
             self.engine = None
             messagebox.showerror("Stockfish Error", "Failed to initialize Stockfish. AI will use Ollama or random moves.")
 
     def reset_game(self):
-        """Reset the game state"""
+        """Reset the game state to initial position."""
         try:
             with self.board_lock:
                 self.chess_board = chess.Board()
@@ -91,11 +104,10 @@ class ChessVsAI:
                 self.update_status()
                 self.update_eval_bar()
         except Exception as e:
-            print(f"Reset game error: {e}")
-            traceback.print_exc()
+            logging.error(f"Reset game error: {e}", exc_info=True)
 
     def setup_gui(self):
-        """Initialize the GUI"""
+        """Initialize the Tkinter GUI components."""
         try:
             self.root = tk.Tk()
             self.root.title("Chess vs AI with LLM")
@@ -160,12 +172,11 @@ class ChessVsAI:
             if self.player_side == 'black':
                 self.root.after(1000, self.ai_move)
         except Exception as e:
-            print(f"GUI setup error: {e}")
-            traceback.print_exc()
+            logging.error(f"GUI setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to initialize GUI")
 
     def setup_status_panel(self):
-        """Setup the status and evaluation panel"""
+        """Setup the status and evaluation panel."""
         try:
             status_frame = tk.Frame(self.control_panel, bg='#2c3e50')
             status_frame.pack(fill='x', pady=(0, 15))
@@ -206,12 +217,11 @@ class ChessVsAI:
             )
             self.eval_label.pack()
         except Exception as e:
-            print(f"Status panel setup error: {e}")
-            traceback.print_exc()
+            logging.error(f"Status panel setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to setup status panel")
 
     def setup_control_buttons(self):
-        """Setup control buttons based on current mode"""
+        """Setup control buttons based on current mode."""
         try:
             if hasattr(self, 'control_frame'):
                 self.control_frame.destroy()
@@ -255,12 +265,11 @@ class ChessVsAI:
                 btn.bind("<Enter>", lambda e, b=btn: b.config(bg='#2980b9'))
                 btn.bind("<Leave>", lambda e, b=btn: b.config(bg='#3498db'))
         except Exception as e:
-            print(f"Control buttons setup error: {e}")
-            traceback.print_exc()
+            logging.error(f"Control buttons setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to setup control buttons")
 
     def setup_analysis_panel(self):
-        """Setup the analysis text panel"""
+        """Setup the analysis text panel."""
         try:
             analysis_frame = tk.Frame(self.control_panel, bg='#2c3e50')
             analysis_frame.pack(fill='both', expand=True, pady=(15, 0))
@@ -294,12 +303,11 @@ class ChessVsAI:
             self.analysis_text.pack(side='left', fill='both', expand=True)
             scrollbar.pack(side='right', fill='y')
         except Exception as e:
-            print(f"Analysis panel setup error: {e}")
-            traceback.print_exc()
+            logging.error(f"Analysis panel setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to setup analysis panel")
 
     def create_board(self):
-        """Create the chess board GUI"""
+        """Create the chess board GUI."""
         try:
             for r in range(8):
                 for c in range(8):
@@ -321,12 +329,11 @@ class ChessVsAI:
                 self.board_frame.grid_rowconfigure(i, weight=1, uniform='chess_rows')
                 self.board_frame.grid_columnconfigure(i, weight=1, uniform='chess_cols')
         except Exception as e:
-            print(f"Error creating board: {e}")
-            traceback.print_exc()
+            logging.error(f"Error creating board: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to initialize chess board")
 
     def on_window_resize(self, event):
-        """Handle window resize events"""
+        """Handle window resize events."""
         try:
             if event.widget == self.root:
                 board_height = self.board_container.winfo_height()
@@ -338,11 +345,10 @@ class ChessVsAI:
                             if self.squares[r][c]:
                                 self.squares[r][c].config(font=('Arial', new_size))
         except Exception as e:
-            print(f"Window resize error: {e}")
-            traceback.print_exc()
+            logging.error(f"Window resize error: {e}", exc_info=True)
 
     def on_closing(self):
-        """Clean up resources when closing"""
+        """Clean up resources when closing."""
         try:
             if self.engine:
                 self.engine.quit()
@@ -351,7 +357,7 @@ class ChessVsAI:
             pass
 
     def get_promotion_piece(self, is_white):
-        """Get promotion piece from user"""
+        """Prompt user to select a pawn promotion piece."""
         try:
             dialog = tk.Toplevel(self.root)
             dialog.title("Pawn Promotion")
@@ -386,16 +392,15 @@ class ChessVsAI:
             piece_map = {'Queen': 'q', 'Rook': 'r', 'Knight': 'n', 'Bishop': 'b'}
             return piece_map.get(getattr(dialog, 'result', None), None)
         except Exception as e:
-            print(f"Promotion dialog error: {e}")
-            traceback.print_exc()
+            logging.error(f"Promotion dialog error: {e}", exc_info=True)
             return None
 
     def make_move(self, move):
-        """Make a move on the board"""
+        """Make a move on the board."""
         try:
             with self.board_lock:
                 if self.game_over or self.review_mode or move not in self.chess_board.legal_moves:
-                    print(f"Invalid move attempt: {move.uci() if move else None}")
+                    logging.warning(f"Invalid move attempt: {move.uci() if move else None}")
                     return False
                 
                 move_data = {'move': move, 'board': copy.deepcopy(self.chess_board)}
@@ -409,12 +414,11 @@ class ChessVsAI:
                 self.last_move = (move.from_square, move.to_square)
                 return True
         except Exception as e:
-            print(f"Make move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Make move error: {e}", exc_info=True)
             return False
 
     def get_position_evaluation(self):
-        """Get position evaluation from engine"""
+        """Get position evaluation from Stockfish engine."""
         try:
             if self.engine:
                 eval_info = self.engine.analyse(
@@ -435,20 +439,19 @@ class ChessVsAI:
                 self.evaluations.append(0.0)
                 self.best_moves.append(None)
         except Exception as e:
-            print(f"Evaluation error: {e}")
-            traceback.print_exc()
+            logging.error(f"Evaluation error: {e}", exc_info=True)
             self.evaluations.append(0.0)
             self.best_moves.append(None)
 
     def undo_move(self):
-        """Undo the last move"""
+        """Undo the last move(s)."""
         try:
             if not self.move_history or self.review_mode or self.ai_thinking:
                 return False
             
             with self.board_lock:
                 if not (len(self.move_history) == len(self.board_history) - 1 == len(self.evaluations) == len(self.best_moves)):
-                    print("Error: Game state lists out of sync")
+                    logging.error("Game state lists out of sync")
                     self.reset_game()
                     return False
                 
@@ -471,12 +474,11 @@ class ChessVsAI:
             self.update_eval_bar()
             return True
         except Exception as e:
-            print(f"Undo move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Undo move error: {e}", exc_info=True)
             return False
 
     def resign(self):
-        """Resign the game and save PGN"""
+        """Resign the game and save PGN."""
         try:
             if not self.game_over and not self.ai_thinking:
                 winner = 'Black' if self.player_side == 'white' else 'White'
@@ -485,14 +487,13 @@ class ChessVsAI:
                 self.auto_save_pgn()
                 self.enter_review_mode()
         except Exception as e:
-            print(f"Resign error: {e}")
-            traceback.print_exc()
+            logging.error(f"Resign error: {e}", exc_info=True)
 
     def auto_save_pgn(self):
-        """Automatically save the game as a PGN file"""
+        """Automatically save the game as a PGN file."""
         try:
             if not self.move_history:
-                print("No moves to save for PGN")
+                logging.info("No moves to save for PGN")
                 return
             
             game = chess.pgn.Game()
@@ -522,21 +523,19 @@ class ChessVsAI:
             try:
                 os.makedirs(save_dir, exist_ok=True)
             except Exception as e:
-                print(f"Failed to create directory {save_dir}: {e}")
-                traceback.print_exc()
+                logging.error(f"Failed to create directory {save_dir}: {e}", exc_info=True)
                 return
             
             file_path = os.path.join(save_dir, f"chess_game_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pgn")
             
             with open(file_path, 'w', encoding='utf-8') as f:
                 print(game, file=f)
-            print(f"Game automatically saved to {file_path}")
+            logging.info(f"Game automatically saved to {file_path}")
         except Exception as e:
-            print(f"Failed to auto-save PGN: {str(e)}")
-            traceback.print_exc()
+            logging.error(f"Failed to auto-save PGN: {str(e)}", exc_info=True)
 
     def save_pgn(self):
-        """Save the game as a PGN file with user-selected location"""
+        """Save the game as a PGN file with user-selected location."""
         try:
             if not self.move_history:
                 messagebox.showinfo("Info", "No moves to save!")
@@ -577,11 +576,11 @@ class ChessVsAI:
                     print(game, file=f)
                 messagebox.showinfo("Success", f"Game saved to {file_path}")
         except Exception as e:
+            logging.error(f"Failed to save PGN: {str(e)}", exc_info=True)
             messagebox.showerror("Error", f"Failed to save PGN: {str(e)}")
-            traceback.print_exc()
 
     def load_pgn(self):
-        """Load a PGN file and enter review mode"""
+        """Load a PGN file and enter review mode."""
         try:
             if self.ai_thinking:
                 messagebox.showinfo("Wait", "Please wait for AI to finish thinking")
@@ -644,12 +643,11 @@ class ChessVsAI:
             self.enter_review_mode()
             messagebox.showinfo("Success", f"Loaded PGN from {file_path}")
         except Exception as e:
-            print(f"Load PGN error: {e}")
-            traceback.print_exc()
+            logging.error(f"Load PGN error: {e}", exc_info=True)
             messagebox.showerror("Error", f"Failed to load PGN: {str(e)}")
 
     def on_click(self, gui_row, gui_col):
-        """Handle square clicks"""
+        """Handle square clicks on the board."""
         try:
             if self.game_over or self.review_mode or self.ai_thinking:
                 return
@@ -662,7 +660,7 @@ class ChessVsAI:
                 board_col = gui_col
             
             square = chess.square(board_col, 7 - board_row)
-            print(f"Clicked square: {chess.square_name(square)}")
+            logging.info(f"Clicked square: {chess.square_name(square)}")
             
             if (self.current_turn == 'white') != (self.player_side == 'white'):
                 return
@@ -671,7 +669,7 @@ class ChessVsAI:
                 piece = self.chess_board.piece_at(square)
                 if piece and piece.color == (self.current_turn == 'white'):
                     self.selected_square = square
-                    print(f"Selected piece: {piece.symbol()} at {chess.square_name(square)}")
+                    logging.info(f"Selected piece: {piece.symbol()} at {chess.square_name(square)}")
                     self.update_board()
             else:
                 if square == self.selected_square:
@@ -680,16 +678,15 @@ class ChessVsAI:
                 elif (self.chess_board.piece_at(square) and 
                       self.chess_board.piece_at(square).color == (self.current_turn == 'white')):
                     self.selected_square = square
-                    print(f"Reselected piece: {self.chess_board.piece_at(square).symbol()} at {chess.square_name(square)}")
+                    logging.info(f"Reselected piece: {self.chess_board.piece_at(square).symbol()} at {chess.square_name(square)}")
                     self.update_board()
                 else:
                     self.attempt_move(square)
         except Exception as e:
-            print(f"On click error: {e}")
-            traceback.print_exc()
+            logging.error(f"On click error: {e}", exc_info=True)
 
     def attempt_move(self, target_square):
-        """Attempt to make a move to the target square"""
+        """Attempt to make a move to the target square."""
         try:
             move = chess.Move(self.selected_square, target_square)
             
@@ -729,17 +726,16 @@ class ChessVsAI:
             self.selected_square = None
             self.update_board()
         except Exception as e:
-            print(f"Attempt move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Attempt move error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to process move")
 
     def check_game_end(self):
-        """Check if the game has ended and save PGN"""
+        """Check if the game has ended and save PGN."""
         try:
             with self.board_lock:
                 if self.chess_board.is_checkmate():
                     winner = 'Black' if self.current_turn == 'white' else 'White'
-                    self.status_label.config(text=f"发行Checkmate! {winner} wins!")
+                    self.status_label.config(text=f"Checkmate! {winner} wins!")
                     self.game_over = True
                     self.auto_save_pgn()
                     self.root.after(1000, self.enter_review_mode)
@@ -764,11 +760,10 @@ class ChessVsAI:
                     self.auto_save_pgn()
                     self.root.after(1000, self.enter_review_mode)
         except Exception as e:
-            print(f"Check game end error: {e}")
-            traceback.print_exc()
+            logging.error(f"Check game end error: {e}", exc_info=True)
 
     def enter_review_mode(self):
-        """Enter game review mode"""
+        """Enter game review mode."""
         try:
             self.review_mode = True
             self.current_review_move = len(self.move_history)
@@ -777,11 +772,10 @@ class ChessVsAI:
             self.update_status()
             self.update_eval_bar()
         except Exception as e:
-            print(f"Enter review mode error: {e}")
-            traceback.print_exc()
+            logging.error(f"Enter review mode error: {e}", exc_info=True)
 
     def exit_review(self):
-        """Exit review mode"""
+        """Exit review mode."""
         try:
             self.review_mode = False
             self.setup_control_buttons()
@@ -789,11 +783,10 @@ class ChessVsAI:
             self.update_status()
             self.update_eval_bar()
         except Exception as e:
-            print(f"Exit review mode error: {e}")
-            traceback.print_exc()
+            logging.error(f"Exit review mode error: {e}", exc_info=True)
 
     def prev_move(self):
-        """Go to previous move in review"""
+        """Go to previous move in review."""
         try:
             if self.current_review_move > 0:
                 self.current_review_move -= 1
@@ -802,11 +795,10 @@ class ChessVsAI:
                 self.update_eval_bar()
             self.control_frame.winfo_children()[0].config(state='disabled' if self.current_review_move == 0 else 'normal')
         except Exception as e:
-            print(f"Previous move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Previous move error: {e}", exc_info=True)
 
     def next_move(self):
-        """Go to next move in review"""
+        """Go to next move in review."""
         try:
             if self.current_review_move < len(self.move_history):
                 self.current_review_move += 1
@@ -815,14 +807,13 @@ class ChessVsAI:
                 self.update_eval_bar()
             self.control_frame.winfo_children()[1].config(state='disabled' if self.current_review_move == len(self.move_history) else 'normal')
         except Exception as e:
-            print(f"Next move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Next move error: {e}", exc_info=True)
 
     def update_board(self):
-        """Update the visual representation of the board"""
+        """Update the visual representation of the board."""
         try:
             if not self.squares or not all(self.squares[r][c] for r in range(8) for c in range(8)):
-                print("Error: Invalid squares array")
+                logging.error("Invalid squares array")
                 return
             
             for r in range(8):
@@ -870,11 +861,10 @@ class ChessVsAI:
                     piece_symbol = self.PIECES.get(piece.symbol() if piece else '', '')
                     btn.config(text=piece_symbol, bg=bg_color)
         except Exception as e:
-            print(f"Update board error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update board error: {e}", exc_info=True)
 
     def update_eval_bar(self):
-        """Update the evaluation bar"""
+        """Update the evaluation bar based on current position."""
         try:
             if not self.evaluations or self.current_review_move == 0:
                 self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75)
@@ -911,11 +901,10 @@ class ChessVsAI:
             
             self.eval_label.config(text=f"{eval_score:+.2f}" if isinstance(eval_score, (int, float)) else str(eval_score))
         except Exception as e:
-            print(f"Update eval bar error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update eval bar error: {e}", exc_info=True)
 
     def update_status(self):
-        """Update status and analysis text"""
+        """Update status and analysis text."""
         try:
             if not hasattr(self, 'status_label'):
                 return
@@ -925,11 +914,10 @@ class ChessVsAI:
             else:
                 self.update_game_status()
         except Exception as e:
-            print(f"Update status error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update status error: {e}", exc_info=True)
 
     def update_review_status(self):
-        """Update status during review mode"""
+        """Update status during review mode."""
         try:
             if self.current_review_move == len(self.move_history):
                 status = "Review: Final position"
@@ -950,17 +938,16 @@ class ChessVsAI:
             self.status_label.config(text=status)
             self.update_analysis_text()
         except Exception as e:
-            print(f"Update review status error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update review status error: {e}", exc_info=True)
 
     def update_game_status(self):
-        """Update status during active game"""
+        """Update status during active game."""
         try:
             if self.game_over:
                 return
             
             if self.ai_thinking:
-                status = "AI is thinking..."
+                status = "AI is thinking... ⏳"
             else:
                 status = f"{self.current_turn.title()}'s turn"
                 if self.chess_board.is_check():
@@ -969,11 +956,10 @@ class ChessVsAI:
             self.status_label.config(text=status)
             self.update_analysis_text()
         except Exception as e:
-            print(f"Update game status error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update game status error: {e}", exc_info=True)
 
     def update_analysis_text(self):
-        """Update the analysis text widget"""
+        """Update the analysis text widget."""
         try:
             self.analysis_text.delete(1.0, tk.END)
             
@@ -982,11 +968,10 @@ class ChessVsAI:
             else:
                 self.show_move_history()
         except Exception as e:
-            print(f"Update analysis text error: {e}")
-            traceback.print_exc()
+            logging.error(f"Update analysis text error: {e}", exc_info=True)
 
     def show_move_analysis(self):
-        """Show analysis for the current move in review"""
+        """Show analysis for the current move in review."""
         try:
             if self.current_review_move == 0:
                 self.analysis_text.insert(tk.END, "Starting position\n")
@@ -1040,11 +1025,10 @@ class ChessVsAI:
             if self.current_review_move - 1 in self.pgn_comments:
                 self.analysis_text.insert(tk.END, f"\nComment: {self.pgn_comments[self.current_review_move - 1]}\n")
         except Exception as e:
-            print(f"Show move analysis error: {e}")
-            traceback.print_exc()
+            logging.error(f"Show move analysis error: {e}", exc_info=True)
 
     def show_move_history(self):
-        """Show recent move history"""
+        """Show recent move history."""
         try:
             self.analysis_text.insert(tk.END, "Recent moves:\n\n")
             start_idx = max(0, len(self.move_history) - 10)
@@ -1066,15 +1050,13 @@ class ChessVsAI:
                         else:
                             self.analysis_text.insert(tk.END, f" {san}\n")
                 except Exception as e:
-                    print(f"Error generating SAN for move {move.uci()}: {e}")
-                    traceback.print_exc()
+                    logging.error(f"Error generating SAN for move {move.uci()}: {e}", exc_info=True)
                     continue
         except Exception as e:
-            print(f"Show move history error: {e}")
-            traceback.print_exc()
+            logging.error(f"Show move history error: {e}", exc_info=True)
 
     def ai_move(self):
-        """Handle AI move generation"""
+        """Handle AI move generation in a separate thread."""
         try:
             if (self.game_over or 
                 self.current_turn == self.player_side or 
@@ -1083,7 +1065,8 @@ class ChessVsAI:
                 return
             
             self.ai_thinking = True
-            self.update_status()
+            self.status_label.config(text="AI is thinking... ⏳")
+            self.root.config(cursor="wait")
             
             def get_ai_move():
                 start_time = time.time()
@@ -1092,25 +1075,23 @@ class ChessVsAI:
                 try:
                     move = self.get_ollama_move(max_retries=3)
                     if move:
-                        print(f"Ollama move: {move.uci()}")
+                        logging.info(f"Ollama move: {move.uci()}")
                         self.debug_text.delete(1.0, tk.END)
                         self.debug_text.insert(tk.END, f"Ollama move: {move.uci()}\n")
                     else:
                         raise Exception("Ollama failed to provide valid move")
                 except Exception as e:
-                    print(f"Ollama failed: {e}")
-                    traceback.print_exc()
+                    logging.error(f"Ollama failed: {e}", exc_info=True)
                     self.debug_text.delete(1.0, tk.END)
                     self.debug_text.insert(tk.END, f"Ollama error: {str(e)}\nFalling back to Stockfish/random\n")
                     
                     if self.engine:
                         try:
-                            move = self.get_stockfish-move()
-                            print(f"Stockfish move: {move.uci()}")
+                            move = self.get_stockfish_move()
+                            logging.info(f"Stockfish move: {move.uci()}")
                             self.debug_text.insert(tk.END, f"Stockfish move: {move.uci()}\n")
                         except Exception as e2:
-                            print(f"Stockfish failed: {e2}")
-                            traceback.print_exc()
+                            logging.error(f"Stockfish failed: {e2}", exc_info=True)
                             self.debug_text.insert(tk.END, f"Stockfish error: {str(e2)}\nFalling back to random\n")
                             move = self.get_random_move()
                     else:
@@ -1120,29 +1101,32 @@ class ChessVsAI:
                 def execute_move():
                     try:
                         self.ai_thinking = False
+                        self.root.config(cursor="")
                         if move and self.make_move(move):
                             self.update_board()
                             self.update_status()
                             self.update_eval_bar()
                             self.check_game_end()
                         
-                        print(f"AI move took {time.time() - start_time:.2f} seconds")
+                        logging.info(f"AI move took {time.time() - start_time:.2f} seconds")
                     except Exception as e:
-                        print(f"Execute AI move error: {e}")
-                        traceback.print_exc()
+                        logging.error(f"Execute AI move error: {e}", exc_info=True)
+                        self.root.config(cursor="")
                 
                 self.root.after(0, execute_move)
             
             threading.Thread(target=get_ai_move, daemon=True).start()
         except Exception as e:
-            print(f"AI move error: {e}")
-            traceback.print_exc()
+            logging.error(f"AI move error: {e}", exc_info=True)
+            self.ai_thinking = False
+            self.root.config(cursor="")
 
     def get_ollama_move(self, max_retries=3):
-        """Get move from Ollama with improved prompt for phi3"""
+        """Get move from Ollama with improved prompt."""
         try:
             with self.board_lock:
                 fen = self.chess_board.fen()
+                logging.info(f"Generating Ollama move for FEN: {fen}")
                 
                 if fen in self.transposition_table:
                     move_str = self.transposition_table[fen]
@@ -1158,15 +1142,18 @@ class ChessVsAI:
                 
                 legal_moves = [move.uci() for move in self.chess_board.legal_moves]
                 side = 'White' if self.current_turn == 'white' else 'Black'
+                recent_moves = ' '.join(board_before.san(move_data['move']) 
+                                      for move_data, board_before in 
+                                      zip(self.move_history[-3:], self.board_history[-4:-1]))
                 
                 prompt = (
                     f"You are playing chess as {side}.\n"
                     f"Current position (FEN): {fen}\n"
+                    f"Recent moves: {recent_moves or 'None'}\n"
                     f"Legal moves in UCI format: {', '.join(legal_moves) if legal_moves else 'None'}\n"
                     f"Your task is to select the best legal move for {side}.\n"
-                    f"Respond with ONLY the UCI move (e.g., e2e4, g1f3, e7e8q for promotion).\n"
-                    f"Do NOT include any other text, explanations, or punctuation.\n"
-                    f"Ensure the move is from the list of legal moves provided."
+                    f"Respond with ONLY the UCI move (e.g., e2e4, g1f3, e7e8q).\n"
+                    f"Do NOT include any other text or punctuation."
                 )
                 
                 if len(self.move_history) < 10:
@@ -1191,13 +1178,13 @@ class ChessVsAI:
                             }
                         )
                         
-                        move_str = response["response"].strip().lower()
+                        move_str = response["response"].strip().lower().replace(' ', '')
                         self.debug_text.delete(1.0, tk.END)
                         self.debug_text.insert(tk.END, f"Attempt {attempt + 1}: {move_str}\n")
                         
                         if not re.match(uci_pattern, move_str):
                             self.debug_text.insert(tk.END, f"Invalid UCI format: {move_str}\n")
-                            print(f"Ollama attempt {attempt + 1} failed: Invalid UCI format {move_str}")
+                            logging.warning(f"Ollama attempt {attempt + 1} failed: Invalid UCI format {move_str}")
                             continue
                         
                         try:
@@ -1210,14 +1197,13 @@ class ChessVsAI:
                                 return move
                             else:
                                 self.debug_text.insert(tk.END, f"Move not legal: {move_str}\n")
-                                print(f"Ollama attempt {attempt + 1} failed: Move {move_str} not in legal moves")
+                                logging.warning(f"Ollama attempt {attempt + 1} failed: Move {move_str} not in legal moves")
                         except ValueError as e:
                             self.debug_text.insert(tk.END, f"Invalid move parsing: {str(e)}\n")
-                            print(f"Ollama attempt {attempt + 1} failed: {str(e)}")
+                            logging.warning(f"Ollama attempt {attempt + 1} failed: {str(e)}")
                         
                     except Exception as e:
-                        print(f"Ollama attempt {attempt + 1} error: {e}")
-                        traceback.print_exc()
+                        logging.error(f"Ollama attempt {attempt + 1} error: {e}", exc_info=True)
                         self.debug_text.insert(tk.END, f"Error: {str(e)}\n")
                     
                     if attempt < max_retries - 1:
@@ -1226,12 +1212,11 @@ class ChessVsAI:
                 self.debug_text.insert(tk.END, "No valid move found, falling back\n")
                 return None
         except Exception as e:
-            print(f"Get Ollama move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Get Ollama move error: {e}", exc_info=True)
             return None
 
     def get_stockfish_move(self):
-        """Get move from Stockfish"""
+        """Get move from Stockfish engine."""
         try:
             if not self.engine:
                 return None
@@ -1244,12 +1229,11 @@ class ChessVsAI:
                 )
                 return result.move
         except Exception as e:
-            print(f"Stockfish error: {e}")
-            traceback.print_exc()
+            logging.error(f"Stockfish error: {e}", exc_info=True)
             return None
 
     def get_random_move(self):
-        """Get random legal move as last resort"""
+        """Get random legal move as last resort."""
         try:
             with self.board_lock:
                 legal_moves = list(self.chess_board.legal_moves)
@@ -1257,12 +1241,11 @@ class ChessVsAI:
                     return random.choice(legal_moves)
                 return None
         except Exception as e:
-            print(f"Get random move error: {e}")
-            traceback.print_exc()
+            logging.error(f"Get random move error: {e}", exc_info=True)
             return None
 
     def new_game(self):
-        """Start a new game"""
+        """Start a new game."""
         try:
             if self.ai_thinking:
                 messagebox.showinfo("Wait", "Please wait for AI to finish thinking")
@@ -1274,11 +1257,10 @@ class ChessVsAI:
             if self.player_side == 'black':
                 self.root.after(1000, self.ai_move)
         except Exception as e:
-            print(f"New game error: {e}")
-            traceback.print_exc()
+            logging.error(f"New game error: {e}", exc_info=True)
 
     def switch_side(self):
-        """Switch player side"""
+        """Switch player side (white/black)."""
         try:
             if self.ai_thinking:
                 messagebox.showinfo("Wait", "Please wait for AI to finish thinking")
@@ -1287,38 +1269,35 @@ class ChessVsAI:
             self.player_side = 'black' if self.player_side == 'white' else 'white'
             self.new_game()
         except Exception as e:
-            print(f"Switch side error: {e}")
-            traceback.print_exc()
+            logging.error(f"Switch side error: {e}", exc_info=True)
 
     def run(self):
-        """Run the application"""
+        """Run the Tkinter application."""
         try:
             self.root.mainloop()
         except KeyboardInterrupt:
-            print("Application interrupted")
+            logging.info("Application interrupted")
         except Exception as e:
-            print(f"Application run error: {e}")
-            traceback.print_exc()
+            logging.error(f"Application run error: {e}", exc_info=True)
         finally:
             self.on_closing()
 
 def main():
+    """Main entry point for the application."""
     try:
         required_modules = ['chess', 'ollama', 'dotenv']
         for module in required_modules:
             try:
                 __import__(module)
             except ImportError:
-                print(f"Error: Required module '{module}' not found.")
-                print(f"Please install it using: pip install {module}")
+                logging.error(f"Required module '{module}' not found. Please install it using: pip install {module}")
                 return
         
         app = ChessVsAI()
         app.run()
         
     except Exception as e:
-        print(f"Application startup error: {e}")
-        traceback.print_exc()
+        logging.error(f"Application startup error: {e}", exc_info=True)
 
 if __name__ == "__main__":
     main()
