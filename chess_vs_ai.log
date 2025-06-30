@@ -106,3 +106,5 @@ Traceback (most recent call last):
 Exception: Ollama failed to provide valid move
 2025-06-29 09:19:22,550 [INFO] Stockfish move: b8c6
 2025-06-29 09:19:22,702 [INFO] AI move took 8.41 seconds
+2025-06-29 19:14:12,363 [INFO] Initializing ChessVsAI
+2025-06-29 19:14:12,868 [INFO] Stockfish loaded successfully.
