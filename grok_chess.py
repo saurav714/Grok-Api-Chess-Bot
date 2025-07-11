@@ -20,8 +20,12 @@ CONFIG = {
     "board_colors": {"light": "#f0d9b5", "dark": "#b58863", "selected": "#90EE90", 
                     "legal_move": "#98FB98", "last_move": "#FFD700", "check": "#FF6B6B"},
     "font_sizes": {"piece": 16, "title": 20, "status": 12, "button": 9, "analysis": 9},
-    "stockfish": {"depth_opening": 10, "depth_midgame": 15, "time_opening": 2.0, "time_midgame": 5.0},
-    "ollama": {"temperature": 0.3, "top_p": 0.8, "num_predict": 8, "timeout": 30.0},
+    "stockfish": {
+        "easy": {"depth": 5, "time": 1.0},
+        "medium": {"depth": 10, "time": 2.0},
+        "hard": {"depth": 15, "time": 5.0}
+    },
+    "ollama": {"temperature": 0.3, "top_p": 0.8, "num_predict": 100, "timeout": 30.0},
     "transposition_table_size": 1000,
     "gui": {"min_size": (700, 500), "bg": "#2c3e50", "panel_width": 250},
     "paths": {"openings": "openings.bin"}
@@ -57,6 +61,7 @@ class ChessVsAI:
         self.ai_thinking = False
         self.board_lock = threading.Lock()
         self.pgn_comments = {}
+        self.ai_difficulty = 'medium'  # Default difficulty
         
         # Load environment variables
         load_dotenv()
@@ -161,26 +166,7 @@ class ChessVsAI:
             self.setup_control_buttons()
             self.setup_analysis_panel()
             self.setup_move_list_panel()
-
-            self.debug_panel = tk.Frame(self.control_panel, bg=CONFIG["gui"]["bg"])
-            self.debug_panel.pack(fill='x', pady=(10, 0))
-            tk.Label(self.debug_panel, text="Ollama Debug", font=('Arial', 11, 'bold'), fg='#ecf0f1', bg=CONFIG["gui"]["bg"]).pack()
-            self.debug_text = tk.Text(
-                self.debug_panel,
-                font=('Arial', CONFIG["font_sizes"]["analysis"]),
-                fg='#ecf0f1',
-                bg='#34495e',
-                wrap='word',
-                height=4,
-                relief='flat',
-                padx=5,
-                pady=5
-            )
-            scrollbar = tk.Scrollbar(self.debug_panel, orient='vertical', command=self.debug_text.yview)
-            self.debug_text.configure(yscrollcommand=scrollbar.set)
-            self.debug_text.pack(side='left', fill='both', expand=True)
-            scrollbar.pack(side='right', fill='y')
-
+            
             self.create_board()
             
             # Bind keyboard shortcuts
@@ -200,7 +186,7 @@ class ChessVsAI:
             messagebox.showerror("Error", f"Failed to initialize GUI: {str(e)}")
 
     def setup_status_panel(self):
-        """Setup the status and evaluation panel."""
+        """Setup the status and evaluation panel with a smaller evaluation bar."""
         try:
             status_frame = tk.Frame(self.control_panel, bg=CONFIG["gui"]["bg"])
             status_frame.pack(fill='x', pady=(0, 15))
@@ -218,24 +204,24 @@ class ChessVsAI:
             eval_frame = tk.Frame(status_frame, bg=CONFIG["gui"]["bg"])
             eval_frame.pack(pady=(10, 0))
 
-            tk.Label(eval_frame, text="Evaluation", font=('Arial', 10), fg='#bdc3c7', bg=CONFIG["gui"]["bg"]).pack()
+            tk.Label(eval_frame, text="Evaluation", font=('Arial', 9), fg='#bdc3c7', bg=CONFIG["gui"]["bg"]).pack()
             
             self.eval_canvas = tk.Canvas(
                 eval_frame, 
-                width=30, 
-                height=150, 
+                width=20, 
+                height=100, 
                 bg='#34495e', 
                 highlightthickness=1,
                 highlightbackground='#bdc3c7'
             )
             self.eval_canvas.pack(pady=5)
             
-            self.eval_bar = self.eval_canvas.create_rectangle(5, 75, 25, 75, fill='#bdc3c7', outline='#7f8c8d')
+            self.eval_bar = self.eval_canvas.create_rectangle(4, 50, 16, 50, fill='#bdc3c7', outline='#7f8c8d')
             
             self.eval_label = tk.Label(
                 eval_frame, 
                 text="0.00", 
-                font=('Arial', 10, 'bold'), 
+                font=('Arial', 8, 'bold'), 
                 fg='#ecf0f1', 
                 bg=CONFIG["gui"]["bg"]
             )
@@ -261,7 +247,7 @@ class ChessVsAI:
                 self.control_frame.destroy()
 
             self.control_frame = tk.Frame(self.control_panel, bg=CONFIG["gui"]["bg"])
-            self.control_frame.pack(pady=10)
+            self.control_frame.pack(pady=2)
 
             btn_style = {
                 'font': ('Arial', CONFIG["font_sizes"]["button"], 'bold'),
@@ -274,6 +260,12 @@ class ChessVsAI:
                 'cursor': 'hand2'
             }
 
+            disabled_style = {
+                'bg': '#7f8c8d',
+                'fg': '#bdc3c7',
+                'state': 'disabled'
+            }
+
             buttons = [
                 ("New Game (Ctrl+N)", self.new_game),
                 ("Switch Side (Ctrl+S)", self.switch_side),
@@ -284,20 +276,116 @@ class ChessVsAI:
             ] if not self.review_mode else [
                 ("\u25C0 Previous", self.prev_move),
                 ("Next \u25B6", self.next_move),
+                ("Add Comment", self.add_comment),
                 ("Exit Review", self.exit_review),
                 ("New Game (Ctrl+N)", self.new_game),
                 ("Save PGN (Ctrl+P)", self.save_pgn),
                 ("Load PGN (Ctrl+O)", self.load_pgn)
             ]
 
+            # AI Difficulty Dropdown
+            tk.Label(self.control_frame, text="AI Difficulty", font=('Arial', 10, 'bold'), fg='#ecf0f1', bg=CONFIG["gui"]["bg"]).pack(pady=(0, 5))
+            self.difficulty_var = tk.StringVar(value=self.ai_difficulty)
+            difficulty_menu = ttk.Combobox(self.control_frame, textvariable=self.difficulty_var, values=['easy', 'medium', 'hard'], state='readonly')
+            difficulty_menu.pack(pady=1)
+            difficulty_menu.bind('<<ComboboxSelected>>', self.set_difficulty)
+
             for text, command in buttons:
                 btn = tk.Button(self.control_frame, text=text, command=command, **btn_style)
-                btn.pack(pady=2)
-                btn.bind("<Enter>", lambda e, b=btn: b.config(bg='#2980b9'))
-                btn.bind("<Leave>", lambda e, b=btn: b.config(bg='#3498db'))
+                btn.pack(pady=1)
+                btn.bind("<Enter>", lambda e, b=btn: b.config(bg='#2980b9') if b['state'] == 'normal' else None)
+                btn.bind("<Leave>", lambda e, b=btn: b.config(bg='#3498db') if b['state'] == 'normal' else None)
+                # Apply disabled style for Previous/Next buttons when appropriate
+                if text == "\u25C0 Previous" and self.current_review_move == 0:
+                    btn.config(**disabled_style)
+                elif text == "Next \u25B6" and self.current_review_move == len(self.move_history):
+                    btn.config(**disabled_style)
         except Exception as e:
             logging.error(f"Control buttons setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to setup control buttons")
+
+    def set_difficulty(self, event):
+        """Set AI difficulty based on dropdown selection."""
+        try:
+            self.ai_difficulty = self.difficulty_var.get()
+            logging.info(f"AI difficulty set to {self.ai_difficulty}")
+        except Exception as e:
+            logging.error(f"Set difficulty error: {e}", exc_info=True)
+
+    def add_comment(self):
+        """Add or edit a comment for the current move in review mode."""
+        try:
+            if not self.review_mode or self.current_review_move == 0:
+                messagebox.showinfo("Info", "Select a move to comment on!")
+                return
+
+            dialog = tk.Toplevel(self.root)
+            dialog.title("Add/Edit Move Comment")
+            dialog.geometry("350x250")
+            dialog.transient(self.root)
+            dialog.grab_set()
+            dialog.configure(bg=CONFIG["gui"]["bg"])
+            
+            # Center the dialog
+            x = self.root.winfo_rootx() + (self.root.winfo_width() - 350) // 2
+            y = self.root.winfo_rooty() + (self.root.winfo_height() - 250) // 2
+            dialog.geometry(f"350x250+{x}+{y}")
+            
+            move_num = (self.current_review_move + 1) // 2
+            color = 'White' if self.current_review_move % 2 == 1 else 'Black'
+            move = self.move_history[self.current_review_move - 1]['move']
+            prev_board = self.board_history[self.current_review_move - 1]
+            try:
+                move_text = prev_board.san(move)
+            except:
+                move_text = move.uci()
+            
+            tk.Label(dialog, text=f"Comment for Move {move_num} ({color}): {move_text}", 
+                     font=('Arial', 12, 'bold'), fg='#ecf0f1', bg=CONFIG["gui"]["bg"], wraplength=300).pack(pady=10)
+            
+            comment_text = tk.Text(dialog, font=('Arial', 10), height=5, width=40)
+            comment_text.pack(pady=5)
+            
+            if self.current_review_move - 1 in self.pgn_comments:
+                comment_text.insert(tk.END, self.pgn_comments[self.current_review_move - 1])
+            
+            def save():
+                comment = comment_text.get("1.0", tk.END).strip()
+                if len(comment) > 500:  # Add a reasonable character limit
+                    messagebox.showwarning("Warning", "Comment is too long (max 500 characters)!")
+                    return
+                if comment:
+                    self.pgn_comments[self.current_review_move - 1] = comment
+                    logging.info(f"Added/Updated comment for move {self.current_review_move}: {comment[:50]}...")
+                else:
+                    self.pgn_comments.pop(self.current_review_move - 1, None)
+                    logging.info(f"Removed comment for move {self.current_review_move}")
+                self.update_analysis_text()
+                self.update_move_list()
+                dialog.destroy()
+            
+            def cancel():
+                dialog.destroy()
+            
+            tk.Button(dialog, text="Save", command=save, font=('Arial', 10), bg='#3498db', 
+                      fg='white', relief='flat', padx=20).pack(pady=5)
+            tk.Button(dialog, text="Cancel", command=cancel, font=('Arial', 10), bg='#e74c3c', 
+                      fg='white', relief='flat', padx=20).pack(pady=5)
+            
+            self.root.wait_window(dialog)
+        except Exception as e:
+            logging.error(f"Add comment error: {e}", exc_info=True)
+            messagebox.showerror("Error", f"Failed to add comment: {str(e)}")
+
+    def prompt_for_comment(self):
+        """Prompt for a comment after a move is made, if in review mode."""
+        try:
+            if self.review_mode and self.current_review_move > 0:
+                result = messagebox.askyesno("Comment", "Would you like to add a comment for this move?")
+                if result:
+                    self.add_comment()
+        except Exception as e:
+            logging.error(f"Prompt for comment error: {e}", exc_info=True)
 
     def setup_analysis_panel(self):
         """Setup the analysis text panel."""
@@ -359,9 +447,42 @@ class ChessVsAI:
             self.move_list_text.configure(yscrollcommand=scrollbar.set)
             self.move_list_text.pack(side='left', fill='both', expand=True)
             scrollbar.pack(side='right', fill='y')
+            
+            # Bind click event for move navigation
+            self.move_list_text.bind('<Button-1>', self.on_move_list_click)
         except Exception as e:
             logging.error(f"Move list panel setup error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to setup move list panel")
+
+    def on_move_list_click(self, event):
+        """Handle clicks on the move list to navigate to a specific move."""
+        try:
+            if not self.review_mode:
+                return
+            
+            # Get the index of the clicked position
+            index = self.move_list_text.index(f"@{event.x},{event.y}")
+            line = int(index.split('.')[0])
+            
+            # Calculate the move number (each line corresponds to a pair of moves)
+            move_pair_index = line - 1  # Lines are 1-based in Tkinter
+            move_index = move_pair_index * 2
+            
+            # Adjust for white or black move
+            if self.move_list_text.get(f"{line}.0", f"{line}.end").strip().endswith('...'):
+                move_index += 1  # Clicked on black's move
+            
+            if 0 <= move_index <= len(self.move_history):
+                self.current_review_move = move_index
+                self.update_board()
+                self.update_status()
+                self.update_eval_bar()
+                self.update_move_list()
+                self.setup_control_buttons()
+                self.root.after(500, self.prompt_for_comment)
+                logging.info(f"Navigated to move {self.current_review_move} via move list click")
+        except Exception as e:
+            logging.error(f"Move list click error: {e}", exc_info=True)
 
     def create_board(self):
         """Create the chess board GUI."""
@@ -482,8 +603,8 @@ class ChessVsAI:
                 self.best_moves.append(None)
                 return
             
-            depth = CONFIG["stockfish"]["depth_opening"] if len(self.move_history) < 20 else CONFIG["stockfish"]["depth_midgame"]
-            time_limit = CONFIG["stockfish"]["time_opening"] if len(self.move_history) < 20 else CONFIG["stockfish"]["time_midgame"]
+            depth = CONFIG["stockfish"][self.ai_difficulty]["depth"]
+            time_limit = CONFIG["stockfish"][self.ai_difficulty]["time"]
             
             eval_info = self.engine.analyse(
                 self.chess_board, 
@@ -573,31 +694,37 @@ class ChessVsAI:
 
     def create_pgn_game(self):
         """Create a PGN game object from current state."""
-        game = chess.pgn.Game()
-        game.headers["Event"] = "Chess vs AI Game"
-        game.headers["Site"] = "Local"
-        game.headers["Date"] = datetime.now().strftime("%Y.%m.%d")
-        game.headers["White"] = "Player" if self.player_side == 'white' else "AI"
-        game.headers["Black"] = "AI" if self.player_side == 'white' else "Player"
-        
-        if self.chess_board.is_checkmate():
-            game.headers["Result"] = "1-0" if self.current_turn == 'black' else "0-1"
-        elif self.chess_board.is_stalemate() or self.chess_board.is_insufficient_material() or \
-             self.chess_board.is_fifty_moves() or self.chess_board.is_repetition():
-            game.headers["Result"] = "1/2-1/2"
-        elif self.game_over:
-            game.headers["Result"] = "0-1" if self.player_side == 'white' else "1-0"
-        else:
-            game.headers["Result"] = "*"
-        
-        node = game
-        temp_board = chess.Board()
-        for move_data in self.move_history:
-            move = move_data['move']
-            node = node.add_variation(move)
-            temp_board.push(move)
-        
-        return game
+        try:
+            game = chess.pgn.Game()
+            game.headers["Event"] = "Chess vs AI Game"
+            game.headers["Site"] = "Local"
+            game.headers["Date"] = datetime.now().strftime("%Y.%m.%d")
+            game.headers["White"] = "Player" if self.player_side == 'white' else "AI"
+            game.headers["Black"] = "AI" if self.player_side == 'white' else "Player"
+            
+            if self.chess_board.is_checkmate():
+                game.headers["Result"] = "1-0" if self.current_turn == 'black' else "0-1"
+            elif self.chess_board.is_stalemate() or self.chess_board.is_insufficient_material() or \
+                 self.chess_board.is_fifty_moves() or self.chess_board.is_repetition():
+                game.headers["Result"] = "1/2-1/2"
+            elif self.game_over:
+                game.headers["Result"] = "0-1" if self.player_side == 'white' else "1-0"
+            else:
+                game.headers["Result"] = "*"
+            
+            node = game
+            temp_board = chess.Board()
+            for i, move_data in enumerate(self.move_history):
+                move = move_data['move']
+                node = node.add_variation(move)
+                if i in self.pgn_comments:
+                    node.comment = self.pgn_comments[i]
+                temp_board.push(move)
+            
+            return game
+        except Exception as e:
+            logging.error(f"Create PGN game error: {e}", exc_info=True)
+            return chess.pgn.Game()
 
     def save_pgn(self):
         """Save the game as a PGN file with user-selected location."""
@@ -841,7 +968,8 @@ class ChessVsAI:
                 self.update_status()
                 self.update_eval_bar()
                 self.update_move_list()
-            self.control_frame.winfo_children()[0].config(state='disabled' if self.current_review_move == 0 else 'normal')
+                self.setup_control_buttons()
+                self.root.after(500, self.prompt_for_comment)
         except Exception as e:
             logging.error(f"Previous move error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to go to previous move")
@@ -855,7 +983,8 @@ class ChessVsAI:
                 self.update_status()
                 self.update_eval_bar()
                 self.update_move_list()
-            self.control_frame.winfo_children()[1].config(state='disabled' if self.current_review_move == len(self.move_history) else 'normal')
+                self.setup_control_buttons()
+                self.root.after(500, self.prompt_for_comment)
         except Exception as e:
             logging.error(f"Next move error: {e}", exc_info=True)
             messagebox.showerror("Error", "Failed to go to next move")
@@ -918,7 +1047,7 @@ class ChessVsAI:
         """Update the evaluation bar based on current position."""
         try:
             if not self.evaluations or self.current_review_move == 0:
-                self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75)
+                self.eval_canvas.coords(self.eval_bar, 4, 50, 16, 50)
                 self.eval_label.config(text="0.00")
                 return
             
@@ -927,27 +1056,27 @@ class ChessVsAI:
             
             if eval_score is None:
                 self.eval_label.config(text="N/A")
-                self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75)
+                self.eval_canvas.coords(self.eval_bar, 4, 50, 16, 50)
                 return
             
             if isinstance(eval_score, str):
                 self.eval_label.config(text=eval_score)
                 if eval_score.startswith('M'):
-                    self.eval_canvas.coords(self.eval_bar, 5, 10, 25, 75)
+                    self.eval_canvas.coords(self.eval_bar, 4, 10, 16, 50)
                     self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
                 else:
-                    self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 140)
+                    self.eval_canvas.coords(self.eval_bar, 4, 50, 16, 90)
                     self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
                 return
             
             score = max(min(float(eval_score), 5.0), -5.0)
-            bar_height = int((score / 10.0) * 150)
+            bar_height = int((score / 10.0) * 100)
             
             if score >= 0:
-                self.eval_canvas.coords(self.eval_bar, 5, 75 - bar_height, 25, 75)
+                self.eval_canvas.coords(self.eval_bar, 4, 50 - bar_height, 16, 50)
                 self.eval_canvas.itemconfig(self.eval_bar, fill='#ffffff')
             else:
-                self.eval_canvas.coords(self.eval_bar, 5, 75, 25, 75 - bar_height)
+                self.eval_canvas.coords(self.eval_bar, 4, 50, 16, 50 - bar_height)
                 self.eval_canvas.itemconfig(self.eval_bar, fill='#000000')
             
             self.eval_label.config(text=f"{eval_score:+.2f}" if isinstance(eval_score, (int, float)) else str(eval_score))
@@ -1027,9 +1156,12 @@ class ChessVsAI:
             logging.error(f"Update analysis text error: {e}", exc_info=True)
 
     def update_move_list(self):
-        """Update the move list panel."""
+        """Update the move list panel with visual indication of commented moves."""
         try:
             self.move_list_text.delete(1.0, tk.END)
+            self.move_list_text.tag_remove("highlight", "1.0", tk.END)
+            self.move_list_text.tag_remove("commented", "1.0", tk.END)
+            
             for i in range(0, len(self.move_history), 2):
                 move_num = (i + 2) // 2
                 white_move = self.move_history[i]['move'] if i < len(self.move_history) else None
@@ -1042,22 +1174,37 @@ class ChessVsAI:
                         line += board_before.san(white_move)
                     except:
                         line += white_move.uci()
+                    if i in self.pgn_comments:
+                        line += " {*}"
                 if black_move:
                     try:
                         line += f" {board_before.san(black_move)}"
                     except:
                         line += f" {black_move.uci()}"
+                    if i + 1 in self.pgn_comments:
+                        line += " {*}"
                 line += "\n"
                 self.move_list_text.insert(tk.END, line)
                 
                 if self.review_mode and i // 2 == (self.current_review_move - 1) // 2:
                     self.move_list_text.tag_add("highlight", f"{i//2 + 1}.0", f"{i//2 + 1}.end")
                     self.move_list_text.tag_configure("highlight", background="#FFD700")
+                
+                # Highlight moves with comments
+                if i in self.pgn_comments:
+                    self.move_list_text.tag_add("commented", f"{i//2 + 1}.{len(str(move_num)) + 2}", 
+                                              f"{i//2 + 1}.{len(str(move_num)) + 2 + len(board_before.san(white_move))}")
+                    self.move_list_text.tag_configure("commented", foreground="#00FF00")
+                if i + 1 in self.pgn_comments and black_move:
+                    start_pos = len(str(move_num)) + 2 + len(board_before.san(white_move)) + 1
+                    self.move_list_text.tag_add("commented", f"{i//2 + 1}.{start_pos}", 
+                                              f"{i//2 + 1}.{start_pos + len(board_before.san(black_move))}")
+                    self.move_list_text.tag_configure("commented", foreground="#00FF00")
         except Exception as e:
             logging.error(f"Update move list error: {e}", exc_info=True)
 
     def show_move_analysis(self):
-        """Show analysis for the current move in review."""
+        """Show analysis for the current move in review with enhanced comment and Ollama explanation display."""
         try:
             if self.current_review_move == 0:
                 self.analysis_text.insert(tk.END, "Starting position\n")
@@ -1073,7 +1220,9 @@ class ChessVsAI:
             except:
                 move_text = move.uci()
             
-            self.analysis_text.insert(tk.END, f"Move: {move_text}\n\n")
+            move_num = (self.current_review_move + 1) // 2
+            color = 'White' if self.current_review_move % 2 == 1 else 'Black'
+            self.analysis_text.insert(tk.END, f"Move {move_num} ({color}): {move_text}\n\n")
             
             if len(self.evaluations) > self.current_review_move - 1 and self.evaluations[self.current_review_move - 1] is not None:
                 curr_eval = self.evaluations[self.current_review_move - 1]
@@ -1109,7 +1258,14 @@ class ChessVsAI:
                     pass
 
             if self.current_review_move - 1 in self.pgn_comments:
-                self.analysis_text.insert(tk.END, f"\nComment: {self.pgn_comments[self.current_review_move - 1]}\n")
+                comment = self.pgn_comments[self.current_review_move - 1]
+                tag = "ai_comment" if comment.startswith("AI (Ollama):") else "user_comment"
+                self.analysis_text.insert(tk.END, f"\nComment: {comment}\n", tag)
+                self.analysis_text.tag_configure("ai_comment", foreground="#00B7EB", font=('Arial', CONFIG["font_sizes"]["analysis"], 'italic'))
+                self.analysis_text.tag_configure("user_comment", foreground="#00FF00", font=('Arial', CONFIG["font_sizes"]["analysis"], 'bold'))
+            
+            # Prompt for user comment after displaying analysis
+            self.root.after(500, self.prompt_for_comment)
         except Exception as e:
             logging.error(f"Show move analysis error: {e}", exc_info=True)
 
@@ -1143,7 +1299,7 @@ class ChessVsAI:
 
     @lru_cache(maxsize=CONFIG["transposition_table_size"])
     def cached_ollama_move(self, fen):
-        """Cached helper for Ollama move generation."""
+        """Cached helper for Ollama move generation with strategic explanation."""
         try:
             legal_moves = [move.uci() for move in self.chess_board.legal_moves]
             side = 'White' if self.current_turn == 'white' else 'Black'
@@ -1152,18 +1308,26 @@ class ChessVsAI:
                                   zip(self.move_history[-3:], self.board_history[-4:-1]))
             
             prompt = (
-                f"You are playing chess as {side}.\n"
+                f"You are a chess expert playing as {side}.\n"
                 f"Current position (FEN): {fen}\n"
                 f"Recent moves: {recent_moves or 'None'}\n"
                 f"Legal moves in UCI format: {', '.join(legal_moves) if legal_moves else 'None'}\n"
-                f"Your task is to select the best legal move for {side}.\n"
-                f"Respond with ONLY the UCI move (e.g., e2e4, g1f3, e7e8q).\n"
-                f"Do NOT include any other text or punctuation."
+                f"Your task is to select the best legal move for {side} and provide a 1-2 sentence explanation "
+                f"emphasizing strategic goals like piece development, central control, king safety, or preparation for key plans (e.g., castling, attacks).\n"
+                f"Respond in the format:\n"
+                f"Move: <UCI move>\n"
+                f"Explanation: <1-2 sentence strategic explanation>\n"
+                f"Example:\n"
+                f"Move: e7e5\n"
+                f"Explanation: This move develops a piece while also reinforcing control over the center and preparing for kingside castling.\n"
+                f"Do NOT include additional text or punctuation outside this format"
             )
             
             if len(self.move_history) < 10:
-                prompt += "\nConsider common opening moves like e4, d4, Nf3, c4." if self.current_turn == 'white' else \
-                          "\nConsider common responses like e5, e6, c5, d5, Nf6."
+                if self.current_turn == 'white':
+                    prompt += "\nPrioritize opening moves like e4, d4, Nf3, or c4 to control the center and develop pieces."
+                else:
+                    prompt += "\nPrioritize responses like e5, d5, Nf6, or c5 to counter White's center and prepare development."
             
             uci_pattern = r'^[a-h][1-8][a-h][1-8][qrbn]?$'  # Matches UCI moves, including castling
             
@@ -1180,45 +1344,55 @@ class ChessVsAI:
                         }
                     )
                     
-                    move_str = response["response"].strip().lower().replace(' ', '')
-                    self.debug_text.delete(1.0, tk.END)
-                    self.debug_text.insert(tk.END, f"Attempt {attempt + 1}: {move_str}\n")
+                    response_text = response["response"].strip()
+                    logging.info(f"Ollama response (attempt {attempt + 1}): {response_text}")
+                    
+                    # Parse response for move and explanation
+                    move_match = re.search(r'Move: ([a-h][1-8][a-h][1-8][qrbn]?)\n', response_text)
+                    explanation_match = re.search(r'Explanation: (.+?)(?:\n|$)', response_text, re.DOTALL)
+                    
+                    if not move_match:
+                        logging.warning(f"Ollama attempt {attempt + 1} failed: Invalid response format")
+                        continue
+                    
+                    move_str = move_match.group(1).strip()
+                    explanation = explanation_match.group(1).strip() if explanation_match else "No strategic explanation provided."
                     
                     if not re.match(uci_pattern, move_str):
-                        self.debug_text.insert(tk.END, f"Invalid UCI format: {move_str}\n")
                         logging.warning(f"Ollama attempt {attempt + 1} failed: Invalid UCI format {move_str}")
                         continue
                     
                     move = chess.Move.from_uci(move_str)
                     if move in self.chess_board.legal_moves:
-                        self.debug_text.insert(tk.END, f"Valid move: {move_str}\n")
-                        return move_str
+                        logging.info(f"Valid move: {move_str}, Explanation: {explanation}")
+                        return move_str, explanation
                     else:
-                        self.debug_text.insert(tk.END, f"Move not legal: {move_str}\n")
                         logging.warning(f"Ollama attempt {attempt + 1} failed: Move {move_str} not in legal moves")
                 
                 except Exception as e:
                     logging.error(f"Ollama attempt {attempt + 1} error: {e}", exc_info=True)
-                    self.debug_text.insert(tk.END, f"Error: {str(e)}\n")
                 
                 if attempt < 2:
                     time.sleep(2 ** attempt)  # Exponential backoff
             
-            self.debug_text.insert(tk.END, "No valid move found, falling back\n")
-            return None
+            logging.warning("No valid move found, falling back")
+            return None, "No valid move found."
         except Exception as e:
             logging.error(f"Cached Ollama move error: {e}", exc_info=True)
-            return None
+            return None, str(e)
 
     def get_ollama_move(self):
-        """Get move from Ollama with caching."""
+        """Get move and explanation from Ollama with caching."""
         try:
             with self.board_lock:
                 fen = self.chess_board.fen()
-                move_str = self.cached_ollama_move(fen)
-                if move_str:
-                    move = chess.Move.from_uci(move_str)
+                result = self.cached_ollama_move(fen)
+                if result and result[0]:
+                    move = chess.Move.from_uci(result[0])
                     if move in self.chess_board.legal_moves:
+                        # Store explanation as a comment if AI makes this move
+                        if result[1] and self.current_turn != self.player_side:
+                            self.pgn_comments[len(self.move_history)] = f"AI (Ollama): {result[1]}"
                         return move
                 return None
         except Exception as e:
@@ -1244,8 +1418,8 @@ class ChessVsAI:
                 return None
             
             with self.board_lock:
-                time_limit = CONFIG["stockfish"]["time_opening"] if len(self.move_history) < 20 else CONFIG["stockfish"]["time_midgame"]
-                depth = CONFIG["stockfish"]["depth_opening"] if len(self.move_history) < 20 else CONFIG["stockfish"]["depth_midgame"]
+                time_limit = CONFIG["stockfish"][self.ai_difficulty]["time"]
+                depth = CONFIG["stockfish"][self.ai_difficulty]["depth"]
                 result = self.engine.play(
                     self.chess_board,
                     chess.engine.Limit(time=time_limit, depth=depth)
@@ -1267,6 +1441,55 @@ class ChessVsAI:
             logging.error(f"Get random move error: {e}", exc_info=True)
             return None
 
+    def generate_ollama_explanation(self, move):
+        """Generate an Ollama explanation for a given move."""
+        try:
+            with self.board_lock:
+                fen = self.chess_board.fen()
+                side = 'White' if self.current_turn == 'white' else 'Black'
+                recent_moves = ' '.join(board_before.san(move_data['move']) 
+                                      for move_data, board_before in 
+                                      zip(self.move_history[-3:], self.board_history[-4:-1]))
+                try:
+                    move_san = self.chess_board.san(move)
+                except:
+                    move_san = move.uci()
+                
+                prompt = (
+                    f"You are a chess expert analyzing a game as {side}.\n"
+                    f"Current position (FEN): {fen}\n"
+                    f"Recent moves: {recent_moves or 'None'}\n"
+                    f"Move to explain: {move_san} ({move.uci()})\n"
+                    f"Provide a 1-2 sentence explanation of why this move is strategically sound, "
+                    f"focusing on chess principles like piece development, central control, king safety, or preparation for key plans (e.g., castling, attacks).\n"
+                    f"Respond in the format:\n"
+                    f"Explanation: <1-2 sentence strategic explanation>\n"
+                    f"Example:\n"
+                    f"Explanation: This move develops a piece while also reinforcing control over the center and preparing for kingside castling.\n"
+                    f"Do NOT include additional text or punctuation outside this format"
+                )
+                
+                response = ollama.generate(
+                    model=self.ollama_model,
+                    prompt=prompt,
+                    options={
+                        'temperature': CONFIG["ollama"]["temperature"],
+                        'top_p': CONFIG["ollama"]["top_p"],
+                        'num_predict': CONFIG["ollama"]["num_predict"],
+                        'timeout': self.ollama_timeout
+                    }
+                )
+                
+                response_text = response["response"].strip()
+                explanation_match = re.search(r'Explanation: (.+?)(?:\n|$)', response_text, re.DOTALL)
+                explanation = explanation_match.group(1).strip() if explanation_match else "No strategic explanation provided."
+                
+                logging.info(f"Explanation for {move.uci()}: {explanation}")
+                return explanation
+        except Exception as e:
+            logging.error(f"Generate Ollama explanation error: {e}", exc_info=True)
+            return "Failed to generate explanation."
+
     def ai_move(self):
         """Handle AI move generation in a separate thread."""
         try:
@@ -1283,46 +1506,50 @@ class ChessVsAI:
             def get_ai_move():
                 start_time = time.time()
                 move = None
+                explanation = None
                 
                 try:
                     # Try opening book first
                     if len(self.move_history) < 10:
                         move = self.get_opening_move()
                         if move:
-                            self.debug_text.delete(1.0, tk.END)
-                            self.debug_text.insert(tk.END, f"Opening move: {move.uci()}\n")
+                            logging.info(f"Opening move: {move.uci()}")
                     
                     # Try Ollama
                     if not move:
-                        move = self.get_ollama_move()
-                        if move:
+                        result = self.get_ollama_move()
+                        if result:
+                            move = result
                             logging.info(f"Ollama move: {move.uci()}")
                         else:
                             raise ChessError("Ollama failed to provide valid move")
                 
                 except Exception as e:
                     logging.error(f"Ollama failed: {e}", exc_info=True)
-                    self.debug_text.delete(1.0, tk.END)
-                    self.debug_text.insert(tk.END, f"Ollama error: {str(e)}\nFalling back to Stockfish/random\n")
                     
                     if self.engine:
                         try:
                             move = self.get_stockfish_move()
                             logging.info(f"Stockfish move: {move.uci()}")
-                            self.debug_text.insert(tk.END, f"Stockfish move: {move.uci()}\n")
                         except Exception as e2:
                             logging.error(f"Stockfish failed: {e2}", exc_info=True)
-                            self.debug_text.insert(tk.END, f"Stockfish error: {str(e2)}\nFalling back to random\n")
                             move = self.get_random_move()
+                            logging.info(f"Random move: {move.uci() if move else 'None'}")
                     else:
                         move = self.get_random_move()
-                        self.debug_text.insert(tk.END, f"Random move: {move.uci() if move else 'None'}\n")
+                        logging.info(f"Random move: {move.uci() if move else 'None'}")
+                
+                # Generate explanation for non-Ollama moves
+                if move and not explanation:
+                    explanation = self.generate_ollama_explanation(move)
                 
                 def execute_move():
                     try:
                         self.ai_thinking = False
                         self.root.config(cursor="")
                         if move and self.make_move(move):
+                            if explanation:
+                                self.pgn_comments[len(self.move_history) - 1] = f"AI (Ollama): {explanation}"
                             self.update_board()
                             self.update_status()
                             self.update_eval_bar()
