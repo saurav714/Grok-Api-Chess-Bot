@@ -25,7 +25,7 @@ CONFIG = {
         "medium": {"depth": 10, "time": 2.0},
         "hard": {"depth": 15, "time": 5.0}
     },
-    "ollama": {"temperature": 0.3, "top_p": 0.8, "num_predict": 100, "timeout": 30.0},
+    "ollama": {"temperature": 0.3, "top_p": 0.8, "num_predict": 8, "timeout": 30.0},
     "transposition_table_size": 1000,
     "gui": {"min_size": (700, 500), "bg": "#2c3e50", "panel_width": 250},
     "paths": {"openings": "openings.bin"}
@@ -166,7 +166,26 @@ class ChessVsAI:
             self.setup_control_buttons()
             self.setup_analysis_panel()
             self.setup_move_list_panel()
-            
+
+            self.debug_panel = tk.Frame(self.control_panel, bg=CONFIG["gui"]["bg"])
+            self.debug_panel.pack(fill='x', pady=(10, 0))
+            tk.Label(self.debug_panel, text="Ollama Debug", font=('Arial', 11, 'bold'), fg='#ecf0f1', bg=CONFIG["gui"]["bg"]).pack()
+            self.debug_text = tk.Text(
+                self.debug_panel,
+                font=('Arial', CONFIG["font_sizes"]["analysis"]),
+                fg='#ecf0f1',
+                bg='#34495e',
+                wrap='word',
+                height=4,
+                relief='flat',
+                padx=5,
+                pady=5
+            )
+            scrollbar = tk.Scrollbar(self.debug_panel, orient='vertical', command=self.debug_text.yview)
+            self.debug_text.configure(yscrollcommand=scrollbar.set)
+            self.debug_text.pack(side='left', fill='both', expand=True)
+            scrollbar.pack(side='right', fill='y')
+
             self.create_board()
             
             # Bind keyboard shortcuts
@@ -1299,7 +1318,7 @@ class ChessVsAI:
 
     @lru_cache(maxsize=CONFIG["transposition_table_size"])
     def cached_ollama_move(self, fen):
-        """Cached helper for Ollama move generation with strategic explanation."""
+        """Cached helper for Ollama move generation with explanation."""
         try:
             legal_moves = [move.uci() for move in self.chess_board.legal_moves]
             side = 'White' if self.current_turn == 'white' else 'Black'
@@ -1308,26 +1327,24 @@ class ChessVsAI:
                                   zip(self.move_history[-3:], self.board_history[-4:-1]))
             
             prompt = (
-                f"You are a chess expert playing as {side}.\n"
+                f"You are playing chess as {side}.\n"
                 f"Current position (FEN): {fen}\n"
                 f"Recent moves: {recent_moves or 'None'}\n"
                 f"Legal moves in UCI format: {', '.join(legal_moves) if legal_moves else 'None'}\n"
-                f"Your task is to select the best legal move for {side} and provide a 1-2 sentence explanation "
-                f"emphasizing strategic goals like piece development, central control, king safety, or preparation for key plans (e.g., castling, attacks).\n"
+                f"Your task is to select the best legal move for {side} and explain why it is the best move in 1-2 sentences.\n"
                 f"Respond in the format:\n"
                 f"Move: <UCI move>\n"
-                f"Explanation: <1-2 sentence strategic explanation>\n"
+                f"Explanation: <1-2 sentence explanation>\n"
                 f"Example:\n"
-                f"Move: e7e5\n"
-                f"Explanation: This move develops a piece while also reinforcing control over the center and preparing for kingside castling.\n"
-                f"Do NOT include additional text or punctuation outside this format"
+                f"Move: e2e4\n"
+                f"Explanation: This move controls the center and opens lines for the queen and bishop.\n"
+                f"Do NOT include additional text or punctuation outside this format."
             )
             
-            if len(self.move_history) < 10:
-                if self.current_turn == 'white':
-                    prompt += "\nPrioritize opening moves like e4, d4, Nf3, or c4 to control the center and develop pieces."
-                else:
-                    prompt += "\nPrioritize responses like e5, d5, Nf6, or c5 to counter White's center and prepare development."
+            if self.current_turn == 'white':
+                prompt += "\nConsider common opening moves like e4, d4, Nf3, c4."
+            else:
+                prompt += "\nConsider common responses like e5, e6, c5, d5, Nf6."
             
             uci_pattern = r'^[a-h][1-8][a-h][1-8][qrbn]?$'  # Matches UCI moves, including castling
             
@@ -1339,43 +1356,48 @@ class ChessVsAI:
                         options={
                             'temperature': CONFIG["ollama"]["temperature"],
                             'top_p': CONFIG["ollama"]["top_p"],
-                            'num_predict': CONFIG["ollama"]["num_predict"],
+                            'num_predict': CONFIG["ollama"]["num_predict"] + 50,  # Increased for explanation
                             'timeout': self.ollama_timeout
                         }
                     )
                     
                     response_text = response["response"].strip()
-                    logging.info(f"Ollama response (attempt {attempt + 1}): {response_text}")
+                    self.debug_text.delete(1.0, tk.END)
+                    self.debug_text.insert(tk.END, f"Attempt {attempt + 1}: {response_text}\n")
                     
                     # Parse response for move and explanation
                     move_match = re.search(r'Move: ([a-h][1-8][a-h][1-8][qrbn]?)\n', response_text)
                     explanation_match = re.search(r'Explanation: (.+?)(?:\n|$)', response_text, re.DOTALL)
                     
                     if not move_match:
+                        self.debug_text.insert(tk.END, f"Invalid response format: {response_text}\n")
                         logging.warning(f"Ollama attempt {attempt + 1} failed: Invalid response format")
                         continue
                     
                     move_str = move_match.group(1).strip()
-                    explanation = explanation_match.group(1).strip() if explanation_match else "No strategic explanation provided."
+                    explanation = explanation_match.group(1).strip() if explanation_match else "No explanation provided."
                     
                     if not re.match(uci_pattern, move_str):
+                        self.debug_text.insert(tk.END, f"Invalid UCI format: {move_str}\n")
                         logging.warning(f"Ollama attempt {attempt + 1} failed: Invalid UCI format {move_str}")
                         continue
                     
                     move = chess.Move.from_uci(move_str)
                     if move in self.chess_board.legal_moves:
-                        logging.info(f"Valid move: {move_str}, Explanation: {explanation}")
+                        self.debug_text.insert(tk.END, f"Valid move: {move_str}\nExplanation: {explanation}\n")
                         return move_str, explanation
                     else:
+                        self.debug_text.insert(tk.END, f"Move not legal: {move_str}\n")
                         logging.warning(f"Ollama attempt {attempt + 1} failed: Move {move_str} not in legal moves")
                 
                 except Exception as e:
                     logging.error(f"Ollama attempt {attempt + 1} error: {e}", exc_info=True)
+                    self.debug_text.insert(tk.END, f"Error: {str(e)}\n")
                 
                 if attempt < 2:
                     time.sleep(2 ** attempt)  # Exponential backoff
             
-            logging.warning("No valid move found, falling back")
+            self.debug_text.insert(tk.END, "No valid move found, falling back\n")
             return None, "No valid move found."
         except Exception as e:
             logging.error(f"Cached Ollama move error: {e}", exc_info=True)
@@ -1441,55 +1463,6 @@ class ChessVsAI:
             logging.error(f"Get random move error: {e}", exc_info=True)
             return None
 
-    def generate_ollama_explanation(self, move):
-        """Generate an Ollama explanation for a given move."""
-        try:
-            with self.board_lock:
-                fen = self.chess_board.fen()
-                side = 'White' if self.current_turn == 'white' else 'Black'
-                recent_moves = ' '.join(board_before.san(move_data['move']) 
-                                      for move_data, board_before in 
-                                      zip(self.move_history[-3:], self.board_history[-4:-1]))
-                try:
-                    move_san = self.chess_board.san(move)
-                except:
-                    move_san = move.uci()
-                
-                prompt = (
-                    f"You are a chess expert analyzing a game as {side}.\n"
-                    f"Current position (FEN): {fen}\n"
-                    f"Recent moves: {recent_moves or 'None'}\n"
-                    f"Move to explain: {move_san} ({move.uci()})\n"
-                    f"Provide a 1-2 sentence explanation of why this move is strategically sound, "
-                    f"focusing on chess principles like piece development, central control, king safety, or preparation for key plans (e.g., castling, attacks).\n"
-                    f"Respond in the format:\n"
-                    f"Explanation: <1-2 sentence strategic explanation>\n"
-                    f"Example:\n"
-                    f"Explanation: This move develops a piece while also reinforcing control over the center and preparing for kingside castling.\n"
-                    f"Do NOT include additional text or punctuation outside this format"
-                )
-                
-                response = ollama.generate(
-                    model=self.ollama_model,
-                    prompt=prompt,
-                    options={
-                        'temperature': CONFIG["ollama"]["temperature"],
-                        'top_p': CONFIG["ollama"]["top_p"],
-                        'num_predict': CONFIG["ollama"]["num_predict"],
-                        'timeout': self.ollama_timeout
-                    }
-                )
-                
-                response_text = response["response"].strip()
-                explanation_match = re.search(r'Explanation: (.+?)(?:\n|$)', response_text, re.DOTALL)
-                explanation = explanation_match.group(1).strip() if explanation_match else "No strategic explanation provided."
-                
-                logging.info(f"Explanation for {move.uci()}: {explanation}")
-                return explanation
-        except Exception as e:
-            logging.error(f"Generate Ollama explanation error: {e}", exc_info=True)
-            return "Failed to generate explanation."
-
     def ai_move(self):
         """Handle AI move generation in a separate thread."""
         try:
@@ -1506,50 +1479,46 @@ class ChessVsAI:
             def get_ai_move():
                 start_time = time.time()
                 move = None
-                explanation = None
                 
                 try:
                     # Try opening book first
                     if len(self.move_history) < 10:
                         move = self.get_opening_move()
                         if move:
-                            logging.info(f"Opening move: {move.uci()}")
+                            self.debug_text.delete(1.0, tk.END)
+                            self.debug_text.insert(tk.END, f"Opening move: {move.uci()}\n")
                     
                     # Try Ollama
                     if not move:
-                        result = self.get_ollama_move()
-                        if result:
-                            move = result
+                        move = self.get_ollama_move()
+                        if move:
                             logging.info(f"Ollama move: {move.uci()}")
                         else:
                             raise ChessError("Ollama failed to provide valid move")
                 
                 except Exception as e:
                     logging.error(f"Ollama failed: {e}", exc_info=True)
+                    self.debug_text.delete(1.0, tk.END)
+                    self.debug_text.insert(tk.END, f"Ollama error: {str(e)}\nFalling back to Stockfish/random\n")
                     
                     if self.engine:
                         try:
                             move = self.get_stockfish_move()
                             logging.info(f"Stockfish move: {move.uci()}")
+                            self.debug_text.insert(tk.END, f"Stockfish move: {move.uci()}\n")
                         except Exception as e2:
                             logging.error(f"Stockfish failed: {e2}", exc_info=True)
+                            self.debug_text.insert(tk.END, f"Stockfish error: {str(e2)}\nFalling back to random\n")
                             move = self.get_random_move()
-                            logging.info(f"Random move: {move.uci() if move else 'None'}")
                     else:
                         move = self.get_random_move()
-                        logging.info(f"Random move: {move.uci() if move else 'None'}")
-                
-                # Generate explanation for non-Ollama moves
-                if move and not explanation:
-                    explanation = self.generate_ollama_explanation(move)
+                        self.debug_text.insert(tk.END, f"Random move: {move.uci() if move else 'None'}\n")
                 
                 def execute_move():
                     try:
                         self.ai_thinking = False
                         self.root.config(cursor="")
                         if move and self.make_move(move):
-                            if explanation:
-                                self.pgn_comments[len(self.move_history) - 1] = f"AI (Ollama): {explanation}"
                             self.update_board()
                             self.update_status()
                             self.update_eval_bar()
