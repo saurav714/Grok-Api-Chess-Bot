@@ -910,3 +910,2085 @@ Traceback (most recent call last):
            ^^^^^^^^^
 AttributeError: module 'chess' has no attribute 'pgn'
 2025-07-11 22:56:07,333 [INFO] Added/Updated comment for move 4: AI (Ollama): This move develops a piece while also...
+2025-07-12 14:29:38,585 [INFO] Initializing ChessVsAI
+2025-07-12 14:29:38,871 [INFO] Stockfish loaded successfully
+2025-07-12 14:29:42,498 [INFO] Clicked square: e2
+2025-07-12 14:29:42,499 [INFO] Selected piece: P at e2
+2025-07-12 14:29:43,714 [INFO] Clicked square: e4
+2025-07-12 14:29:46,513 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:29:49,557 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:29:53,587 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:29:53,588 [WARNING] No valid move found, falling back
+2025-07-12 14:29:53,588 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1525, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 14:29:53,597 [INFO] Stockfish move: e7e5
+2025-07-12 14:29:55,632 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1472, in generate_ollama_explanation
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:29:55,646 [INFO] AI move took 11.17 seconds
+2025-07-12 14:29:57,497 [INFO] Clicked square: g1
+2025-07-12 14:29:57,497 [INFO] Selected piece: N at g1
+2025-07-12 14:29:58,288 [INFO] Clicked square: f3
+2025-07-12 14:30:00,828 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:30:03,860 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:30:07,885 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1336, in cached_ollama_move
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:30:07,886 [WARNING] No valid move found, falling back
+2025-07-12 14:30:07,886 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1525, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 14:30:07,892 [INFO] Stockfish move: b8c6
+2025-07-12 14:30:09,936 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1472, in generate_ollama_explanation
+    response = ollama.generate(
+               ^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 14:30:09,949 [INFO] AI move took 11.15 seconds
+2025-07-12 14:30:12,853 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 698, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 14:30:12,854 [ERROR] Failed to auto-save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 698, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 682, in auto_save_pgn
+    game = self.create_pgn_game()
+           ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 727, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 14:31:04,212 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 532, in on_closing
+    self.engine.quit()
+  File "C:\Users\HP\anaconda3\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\contextlib.py", line 137, in __enter__
+    return next(self.gen)
+           ^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 15:25:53,890 [INFO] Initializing ChessVsAI
+2025-07-12 15:25:54,169 [INFO] Stockfish loaded successfully
+2025-07-12 15:25:59,243 [INFO] Clicked square: e2
+2025-07-12 15:25:59,243 [INFO] Selected piece: P at e2
+2025-07-12 15:26:02,013 [INFO] Clicked square: e4
+2025-07-12 15:26:04,715 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:07,761 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:11,801 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:11,802 [WARNING] No valid move found, falling back
+2025-07-12 15:26:11,802 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:26:11,809 [INFO] Stockfish move: e7e5
+2025-07-12 15:26:13,828 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:13,845 [INFO] AI move took 11.16 seconds
+2025-07-12 15:26:15,307 [INFO] Clicked square: f1
+2025-07-12 15:26:15,307 [INFO] Selected piece: B at f1
+2025-07-12 15:26:16,431 [INFO] Clicked square: c4
+2025-07-12 15:26:18,988 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:22,026 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:26,051 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:26,053 [WARNING] No valid move found, falling back
+2025-07-12 15:26:26,053 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:26:26,058 [INFO] Stockfish move: g8f6
+2025-07-12 15:26:28,094 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:28,110 [INFO] AI move took 11.16 seconds
+2025-07-12 15:26:31,140 [INFO] Clicked square: g1
+2025-07-12 15:26:31,140 [INFO] Selected piece: N at g1
+2025-07-12 15:26:31,806 [INFO] Clicked square: f3
+2025-07-12 15:26:34,369 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:37,398 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:41,435 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:41,437 [WARNING] No valid move found, falling back
+2025-07-12 15:26:41,437 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:26:41,448 [INFO] Stockfish move: f6e4
+2025-07-12 15:26:43,476 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:43,504 [INFO] AI move took 11.18 seconds
+2025-07-12 15:26:49,908 [INFO] Clicked square: e1
+2025-07-12 15:26:49,908 [INFO] Selected piece: K at e1
+2025-07-12 15:26:51,908 [INFO] Clicked square: g1
+2025-07-12 15:26:54,478 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:26:57,515 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:01,561 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:01,563 [WARNING] No valid move found, falling back
+2025-07-12 15:27:01,563 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:27:01,567 [INFO] Stockfish move: d7d5
+2025-07-12 15:27:03,599 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:03,618 [INFO] AI move took 11.18 seconds
+2025-07-12 15:27:18,219 [INFO] Clicked square: c4
+2025-07-12 15:27:18,220 [INFO] Selected piece: B at c4
+2025-07-12 15:27:18,939 [INFO] Clicked square: b3
+2025-07-12 15:27:21,518 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:24,560 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:28,587 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:28,589 [WARNING] No valid move found, falling back
+2025-07-12 15:27:28,589 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:27:28,597 [INFO] Stockfish move: b8c6
+2025-07-12 15:27:30,644 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:27:30,658 [INFO] AI move took 11.19 seconds
+2025-07-12 15:27:30,848 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 687, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:27:30,849 [ERROR] Failed to auto-save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 687, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 671, in auto_save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 716, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:29:26,453 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 521, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 15:29:45,163 [INFO] Initializing ChessVsAI
+2025-07-12 15:29:45,370 [INFO] Stockfish loaded successfully
+2025-07-12 15:30:04,780 [INFO] Clicked square: e2
+2025-07-12 15:30:04,780 [INFO] Selected piece: P at e2
+2025-07-12 15:30:05,724 [INFO] Clicked square: e4
+2025-07-12 15:30:08,407 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:30:11,438 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:30:15,473 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:30:15,475 [WARNING] No valid move found, falling back
+2025-07-12 15:30:15,475 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:30:15,481 [INFO] Stockfish move: c7c5
+2025-07-12 15:30:17,523 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:30:17,543 [INFO] AI move took 11.16 seconds
+2025-07-12 15:30:17,844 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:30:17,846 [ERROR] Failed to auto-save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 677, in auto_save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:30:19,317 [INFO] AI difficulty set to hard
+2025-07-12 15:30:29,058 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 527, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 15:36:10,730 [INFO] Initializing ChessVsAI
+2025-07-12 15:36:10,986 [INFO] Stockfish loaded successfully
+2025-07-12 15:36:24,542 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:27,594 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:31,628 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:31,631 [WARNING] No valid move found, falling back
+2025-07-12 15:36:31,631 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:36:31,665 [INFO] Stockfish move: e2e4
+2025-07-12 15:36:33,681 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:33,699 [INFO] AI move took 11.21 seconds
+2025-07-12 15:36:34,978 [INFO] Clicked square: e7
+2025-07-12 15:36:34,978 [INFO] Selected piece: p at e7
+2025-07-12 15:36:36,347 [INFO] Clicked square: e5
+2025-07-12 15:36:38,894 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:41,922 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:45,953 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:45,955 [WARNING] No valid move found, falling back
+2025-07-12 15:36:45,955 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 15:36:45,959 [INFO] Stockfish move: g1f3
+2025-07-12 15:36:47,994 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 15:36:48,007 [INFO] AI move took 11.15 seconds
+2025-07-12 15:36:51,490 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:36:51,491 [ERROR] Failed to auto-save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 677, in auto_save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:14,307 [INFO] AI difficulty set to easy
+2025-07-12 15:47:25,670 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:25,671 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:34,094 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:34,095 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:40,214 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:47:40,215 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 15:48:31,753 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 527, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 17:01:14,340 [INFO] Initializing ChessVsAI
+2025-07-12 17:01:14,617 [INFO] Stockfish loaded successfully
+2025-07-12 17:01:17,873 [INFO] Clicked square: e2
+2025-07-12 17:01:17,873 [INFO] Selected piece: P at e2
+2025-07-12 17:01:18,616 [INFO] Clicked square: e4
+2025-07-12 17:01:21,327 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:01:24,358 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:01:28,381 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1320, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:01:28,383 [WARNING] No valid move found, falling back
+2025-07-12 17:01:28,384 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1509, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 17:01:28,388 [INFO] Stockfish move: e7e5
+2025-07-12 17:01:30,419 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1456, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:01:30,432 [INFO] AI move took 11.15 seconds
+2025-07-12 17:01:34,624 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 687, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 17:01:34,625 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 687, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 725, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 716, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 17:01:49,186 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 521, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 17:07:15,117 [INFO] Initializing ChessVsAI
+2025-07-12 17:07:15,321 [INFO] Stockfish loaded successfully
+2025-07-12 17:07:18,814 [INFO] Clicked square: e2
+2025-07-12 17:07:18,814 [INFO] Selected piece: P at e2
+2025-07-12 17:07:19,659 [INFO] Clicked square: e4
+2025-07-12 17:07:22,328 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:07:25,366 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:07:29,391 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:07:29,393 [WARNING] No valid move found, falling back
+2025-07-12 17:07:29,393 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 17:07:29,400 [INFO] Stockfish move: e7e5
+2025-07-12 17:07:31,424 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 17:07:31,438 [INFO] AI move took 11.15 seconds
+2025-07-12 17:07:32,378 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 17:07:32,379 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:23:18,706 [INFO] Initializing ChessVsAI
+2025-07-12 22:23:18,953 [INFO] Stockfish loaded successfully
+2025-07-12 22:23:20,793 [INFO] Clicked square: e2
+2025-07-12 22:23:20,793 [INFO] Selected piece: P at e2
+2025-07-12 22:23:21,464 [INFO] Clicked square: e4
+2025-07-12 22:23:24,203 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:23:27,223 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:23:31,241 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:23:31,243 [WARNING] No valid move found, falling back
+2025-07-12 22:23:31,243 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 22:23:31,254 [INFO] Stockfish move: c7c5
+2025-07-12 22:23:33,276 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:23:33,294 [INFO] AI move took 11.15 seconds
+2025-07-12 22:24:00,150 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:24:00,151 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:25:51,733 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:25:51,734 [ERROR] Failed to auto-save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 677, in auto_save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:26:46,499 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 527, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-12 22:39:37,369 [INFO] Initializing ChessVsAI
+2025-07-12 22:39:37,596 [INFO] Stockfish loaded successfully
+2025-07-12 22:39:40,464 [INFO] Clicked square: e2
+2025-07-12 22:39:40,465 [INFO] Selected piece: P at e2
+2025-07-12 22:39:41,140 [INFO] Clicked square: e4
+2025-07-12 22:39:43,833 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:39:45,185 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:39:45,187 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:39:46,867 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:39:50,917 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1326, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:39:50,918 [WARNING] No valid move found, falling back
+2025-07-12 22:39:50,918 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1515, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-12 22:39:50,924 [INFO] Stockfish move: e7e5
+2025-07-12 22:39:52,964 [ERROR] Generate Ollama explanation error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1462, in generate_ollama_explanation
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-12 22:39:52,993 [INFO] AI move took 11.21 seconds
+2025-07-12 22:40:18,210 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:40:18,211 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 693, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 731, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 722, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-12 22:41:00,366 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 527, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-13 09:28:31,845 [INFO] Initializing ChessVsAI
+2025-07-13 09:28:32,178 [INFO] Stockfish loaded successfully
+2025-07-13 09:28:34,067 [INFO] Clicked square: e2
+2025-07-13 09:28:34,068 [INFO] Selected piece: P at e2
+2025-07-13 09:28:39,307 [INFO] Switched side to black
+2025-07-13 09:28:40,313 [WARNING] Ollama attempt 1 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:41,314 [WARNING] Ollama attempt 2 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:42,315 [WARNING] Ollama attempt 3 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:42,352 [INFO] Stockfish move: e2e4
+2025-07-13 09:28:42,368 [WARNING] Ollama attempt 1 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:44,251 [INFO] Clicked square: e7
+2025-07-13 09:28:44,252 [INFO] Selected piece: p at e7
+2025-07-13 09:28:45,470 [INFO] Clicked square: e5
+2025-07-13 09:28:45,484 [WARNING] Ollama attempt 1 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:45,987 [WARNING] Ollama attempt 1 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:46,989 [WARNING] Ollama attempt 2 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:47,990 [WARNING] Ollama attempt 3 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:47,998 [INFO] Stockfish move: g1f3
+2025-07-13 09:28:48,015 [WARNING] Ollama attempt 1 failed: Client.generate() got an unexpected keyword argument 'timeout'
+2025-07-13 09:28:52,730 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 706, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 09:28:52,743 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 706, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 744, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 735, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 09:28:56,574 [ERROR] Undo move error: Game state lists out of sync
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 645, in undo_move
+    raise ChessError("Game state lists out of sync")
+ChessError: Game state lists out of sync
+2025-07-13 09:29:00,029 [INFO] Switched side to white
+2025-07-13 09:29:01,782 [INFO] Stockfish engine closed successfully
+2025-07-13 15:37:20,714 [INFO] Initializing ChessVsAI
+2025-07-13 15:37:20,980 [INFO] Stockfish loaded successfully
+2025-07-13 15:37:25,436 [INFO] Clicked square: e2
+2025-07-13 15:37:25,436 [INFO] Selected piece: P at e2
+2025-07-13 15:37:26,168 [INFO] Clicked square: e4
+2025-07-13 15:37:28,983 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1353, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-13 15:37:32,035 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1353, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-13 15:37:36,075 [ERROR] Ollama attempt 3 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1353, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-13 15:37:36,077 [ERROR] Ollama failed: Ollama failed to provide valid move
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1497, in get_ai_move
+    raise ChessError("Ollama failed to provide valid move")
+ChessError: Ollama failed to provide valid move
+2025-07-13 15:37:36,080 [INFO] Stockfish move: e7e5
+2025-07-13 15:37:36,090 [INFO] AI move took 9.17 seconds
+2025-07-13 15:37:37,529 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 717, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 15:37:37,530 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 717, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 755, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 746, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 15:37:41,004 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 551, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-13 15:38:10,535 [INFO] Initializing ChessVsAI
+2025-07-13 15:38:10,752 [INFO] Stockfish loaded successfully
+2025-07-13 15:39:29,637 [INFO] Application interrupted
+2025-07-13 15:39:29,638 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 519, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
+2025-07-13 15:39:53,406 [INFO] Initializing ChessVsAI
+2025-07-13 15:39:53,607 [INFO] Stockfish loaded successfully
+2025-07-13 15:39:55,061 [INFO] Clicked square: e2
+2025-07-13 15:39:55,062 [INFO] Selected piece: P at e2
+2025-07-13 15:39:55,614 [INFO] Clicked square: e4
+2025-07-13 15:39:58,311 [ERROR] Ollama attempt 1 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1353, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-13 15:39:58,605 [ERROR] Create PGN game error: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 717, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 15:39:58,606 [ERROR] Failed to save PGN: module 'chess' has no attribute 'pgn'
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 717, in create_pgn_game
+    game = chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 755, in save_pgn
+    game = self.create_pgn_game()
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 746, in create_pgn_game
+    return chess.pgn.Game()
+           ^^^^^^^^^
+AttributeError: module 'chess' has no attribute 'pgn'
+2025-07-13 15:40:01,343 [ERROR] Ollama attempt 2 error: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 1353, in cached_ollama_move
+    response = ollama.generate(
+        model=self.ollama_model,
+    ...<6 lines>...
+        }
+    )
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 247, in generate
+    return self._request(
+           ~~~~~~~~~~~~~^
+      GenerateResponse,
+      ^^^^^^^^^^^^^^^^^
+    ...<17 lines>...
+      stream=stream,
+      ^^^^^^^^^^^^^^
+    )
+    ^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 180, in _request
+    return cls(**self._request_raw(*args, **kwargs).json())
+                 ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\ollama\_client.py", line 126, in _request_raw
+    raise ConnectionError(CONNECTION_ERROR_MESSAGE) from None
+ConnectionError: Failed to connect to Ollama. Please check that Ollama is downloaded, running and accessible. https://ollama.com/download
+2025-07-13 15:40:01,718 [ERROR] On closing error: engine event loop dead
+Traceback (most recent call last):
+  File "C:\Users\HP\Desktop\Ollama-Chess_GUI\grok_chess.py", line 551, in on_closing
+    self.engine.quit()
+    ~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 3011, in quit
+    with self._not_shut_down():
+         ~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\contextlib.py", line 141, in __enter__
+    return next(self.gen)
+  File "C:\Users\HP\anaconda3\envs\ipykernel_py2\Lib\site-packages\chess\engine.py", line 2931, in _not_shut_down
+    raise EngineTerminatedError("engine event loop dead")
+chess.engine.EngineTerminatedError: engine event loop dead
